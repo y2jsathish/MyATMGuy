@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Central monitoring dashboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+button:focus-visible{outline:3px solid #0E6B6B;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 1000px; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F3EE; color: #1C2433; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+
+<header style="box-sizing: border-box; padding: 12px 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; background: #FFFFFF; border-bottom: 1px solid #D8D3C6">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 32px">
+<div style="font-size: 20px; line-height: 28px; font-weight: 600">[PRODUCT NAME] Operations</div>
+<nav aria-label="Console sections" style="display: flex; flex-wrap: wrap; gap: 8px">
+<button type="button" aria-current="page" style="min-height: 44px; padding: 0 16px; border-radius: 10px; font-size: 15px; font-weight: 600; color: #0B5A5A; background: #E3F0EE; border: 1px solid #0E6B6B; cursor: pointer">Fleet</button>
+<button type="button" style="min-height: 44px; padding: 0 16px; border-radius: 10px; font-size: 15px; color: #1C2433; background: transparent; border: 1px solid transparent; cursor: pointer">Alerts</button>
+<button type="button" style="min-height: 44px; padding: 0 16px; border-radius: 10px; font-size: 15px; color: #1C2433; background: transparent; border: 1px solid transparent; cursor: pointer">Software</button>
+<button type="button" style="min-height: 44px; padding: 0 16px; border-radius: 10px; font-size: 15px; color: #1C2433; background: transparent; border: 1px solid transparent; cursor: pointer">Reports</button>
+</nav>
+</div>
+<span style="font-size: 15px; color: #4F5968">Signed in: [OPERATOR NAME]</span>
+</header>
+
+<main style="box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 24px">
+
+<div>
+<h1 style="margin: 0; font-size: 30px; line-height: 38px; font-weight: 600">Fleet overview</h1>
+<p style="margin: 4px 0 0; font-size: 15px; line-height: 22px; color: #4F5968">One view across every vendor. Fed by the monitoring API built in Phase 1. Sample data shown.</p>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px" role="group" aria-label="Filter by vendor">
+<button type="button" aria-pressed="true" style="min-height: 44px; padding: 0 20px; border-radius: 999px; font-size: 15px; font-weight: 600; color: #0B5A5A; background: #E3F0EE; border: 1px solid #0E6B6B; cursor: pointer">All vendors</button>
+<button type="button" aria-pressed="false" style="min-height: 44px; padding: 0 20px; border-radius: 999px; font-size: 15px; color: #1C2433; background: #FFFFFF; border: 1px solid #BDB8AA; cursor: pointer">Diebold Nixdorf</button>
+<button type="button" aria-pressed="false" style="min-height: 44px; padding: 0 20px; border-radius: 999px; font-size: 15px; color: #1C2433; background: #FFFFFF; border: 1px solid #BDB8AA; cursor: pointer">NCR</button>
+<button type="button" aria-pressed="false" style="min-height: 44px; padding: 0 20px; border-radius: 999px; font-size: 15px; color: #1C2433; background: #FFFFFF; border: 1px solid #BDB8AA; cursor: pointer">Hyosung</button>
+<button type="button" aria-pressed="false" style="min-height: 44px; padding: 0 20px; border-radius: 999px; font-size: 15px; color: #1C2433; background: #FFFFFF; border: 1px solid #BDB8AA; cursor: pointer">GRG</button>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 16px">
+<div style="box-sizing: border-box; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6">
+<div style="font-size: 13px; line-height: 18px; color: #4F5968">Online</div>
+<div style="margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: 32px; line-height: 38px; font-weight: 600"><svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg><span>4</span></div>
+</div>
+<div style="box-sizing: border-box; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6">
+<div style="font-size: 13px; line-height: 18px; color: #4F5968">Degraded</div>
+<div style="margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: 32px; line-height: 38px; font-weight: 600"><svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 L14.5 13.5 H1.5 Z" fill="#A15C00"/></svg><span>2</span></div>
+</div>
+<div style="box-sizing: border-box; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6">
+<div style="font-size: 13px; line-height: 18px; color: #4F5968">Offline</div>
+<div style="margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: 32px; line-height: 38px; font-weight: 600"><svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="#B42318"/></svg><span>1</span></div>
+</div>
+<div style="box-sizing: border-box; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6">
+<div style="font-size: 13px; line-height: 18px; color: #4F5968">Open errors</div>
+<div style="margin-top: 6px; font-size: 32px; line-height: 38px; font-weight: 600">5</div>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px">
+
+<section aria-labelledby="terminals-heading" style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<h2 id="terminals-heading" style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 600">Terminals needing attention first</h2>
+<div style="border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6; overflow-x: auto">
+<table style="width: 100%; min-width: 640px; border-collapse: collapse; font-size: 15px; line-height: 22px">
+<thead>
+<tr style="text-align: left; background: #ECE9E1">
+<th scope="col" style="padding: 12px 20px; font-weight: 600">Terminal</th>
+<th scope="col" style="padding: 12px 20px; font-weight: 600">Vendor</th>
+<th scope="col" style="padding: 12px 20px; font-weight: 600">Status</th>
+<th scope="col" style="padding: 12px 20px; font-weight: 600">Last heartbeat</th>
+<th scope="col" style="padding: 12px 20px; font-weight: 600">Version</th>
+<th scope="col" style="padding: 12px 20px; font-weight: 600">Errors</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">ATM-0006</td><td style="padding: 12px 20px">Diebold Nixdorf</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="#B42318"/></svg>Offline</span></td><td style="padding: 12px 20px; color: #4F5968">14 min ago</td><td style="padding: 12px 20px; color: #4F5968">1.0.0</td><td style="padding: 12px 20px">2</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">ATM-0003</td><td style="padding: 12px 20px">Hyosung</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 L14.5 13.5 H1.5 Z" fill="#A15C00"/></svg>Degraded</span></td><td style="padding: 12px 20px; color: #4F5968">45 s ago</td><td style="padding: 12px 20px; color: #4F5968">1.0.0</td><td style="padding: 12px 20px">2</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">ATM-0005</td><td style="padding: 12px 20px">NCR</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 L14.5 13.5 H1.5 Z" fill="#A15C00"/></svg>Degraded</span></td><td style="padding: 12px 20px; color: #4F5968">31 s ago</td><td style="padding: 12px 20px; color: #4F5968">0.9.4</td><td style="padding: 12px 20px">1</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">ATM-0001</td><td style="padding: 12px 20px">Diebold Nixdorf</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg>Online</span></td><td style="padding: 12px 20px; color: #4F5968">12 s ago</td><td style="padding: 12px 20px; color: #4F5968">1.0.0</td><td style="padding: 12px 20px">0</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">ATM-0002</td><td style="padding: 12px 20px">NCR</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg>Online</span></td><td style="padding: 12px 20px; color: #4F5968">20 s ago</td><td style="padding: 12px 20px; color: #4F5968">1.0.0</td><td style="padding: 12px 20px">0</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">ATM-0004</td><td style="padding: 12px 20px">GRG</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg>Online</span></td><td style="padding: 12px 20px; color: #4F5968">8 s ago</td><td style="padding: 12px 20px; color: #4F5968">1.0.0</td><td style="padding: 12px 20px">0</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">ATM-0007</td><td style="padding: 12px 20px">Hyosung</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg>Online</span></td><td style="padding: 12px 20px; color: #4F5968">5 s ago</td><td style="padding: 12px 20px; color: #4F5968">1.0.0</td><td style="padding: 12px 20px">0</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section aria-labelledby="alerts-heading" style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 12px">
+<h2 id="alerts-heading" style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 600">Open alerts</h2>
+<div style="border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6">
+<div style="box-sizing: border-box; padding: 14px 20px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; line-height: 22px"><span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="#B42318"/></svg>High · ATM-0006</span><span>Heartbeat missed</span><span style="font-size: 13px; color: #4F5968">14 min ago</span></div>
+<div style="box-sizing: border-box; padding: 14px 20px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; line-height: 22px; border-top: 1px solid #D8D3C6"><span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 L14.5 13.5 H1.5 Z" fill="#A15C00"/></svg>Medium · ATM-0006</span><span>Client restarted by the watchdog</span><span style="font-size: 13px; color: #4F5968">20 min ago</span></div>
+<div style="box-sizing: border-box; padding: 14px 20px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; line-height: 22px; border-top: 1px solid #D8D3C6"><span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 L14.5 13.5 H1.5 Z" fill="#A15C00"/></svg>Medium · ATM-0003</span><span>Event bus backlog above the threshold</span><span style="font-size: 13px; color: #4F5968">6 min ago</span></div>
+<div style="box-sizing: border-box; padding: 14px 20px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; line-height: 22px; border-top: 1px solid #D8D3C6"><span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#4F5968"/></svg>Low · ATM-0003</span><span>Configuration reload rejected, last-known-good kept</span><span style="font-size: 13px; color: #4F5968">1 hour ago</span></div>
+<div style="box-sizing: border-box; padding: 14px 20px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; line-height: 22px; border-top: 1px solid #D8D3C6"><span style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#4F5968"/></svg>Low · ATM-0005</span><span>Running 0.9.4, an update is available</span><span style="font-size: 13px; color: #4F5968">2 hours ago</span></div>
+</div>
+</section>
+
+</div>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Supervisor maintenance</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+button:focus-visible{outline:3px solid #0E6B6B;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 1000px; box-sizing: border-box; display: flex; flex-direction: column; background: #F5F3EE; color: #1C2433; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+
+<div style="box-sizing: border-box; padding: 16px 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; background: #FFFFFF; border-bottom: 1px solid #D8D3C6">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+<div>
+<div style="font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.08em; color: #4F5968">MAINTENANCE MODE</div>
+<div style="font-size: 22px; line-height: 30px; font-weight: 600">Terminal [ATM-0001]</div>
+</div>
+<span style="padding: 4px 12px; border-radius: 999px; font-size: 13px; line-height: 18px; background: #E3F0EE; border: 1px solid #0E6B6B">UAT profile</span>
+<span style="padding: 4px 12px; border-radius: 999px; font-size: 13px; line-height: 18px; background: #FFFFFF; border: 1px solid #BDB8AA">Version 1.0.0-rc.1</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+<span style="font-size: 15px; color: #4F5968">Signed in: [SUPERVISOR NAME]</span>
+<button type="button" style="min-height: 44px; padding: 0 20px; border-radius: 10px; font-size: 15px; font-weight: 600; color: #1C2433; background: #FFFFFF; border: 1px solid #1C2433; cursor: pointer">Exit maintenance mode</button>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; flex: 1; align-items: flex-start">
+
+<nav aria-label="Maintenance sections" style="flex: 0 0 240px; box-sizing: border-box; padding: 24px; display: flex; flex-direction: column; gap: 8px">
+<button type="button" aria-current="page" style="min-height: 48px; padding: 0 16px; border-radius: 10px; text-align: left; font-size: 16px; font-weight: 600; color: #0B5A5A; background: #E3F0EE; border: 1px solid #0E6B6B; cursor: pointer">Health</button>
+<button type="button" style="min-height: 48px; padding: 0 16px; border-radius: 10px; text-align: left; font-size: 16px; color: #1C2433; background: transparent; border: 1px solid transparent; cursor: pointer">Logs</button>
+<button type="button" style="min-height: 48px; padding: 0 16px; border-radius: 10px; text-align: left; font-size: 16px; color: #1C2433; background: transparent; border: 1px solid transparent; cursor: pointer">Configuration</button>
+<button type="button" style="min-height: 48px; padding: 0 16px; border-radius: 10px; text-align: left; font-size: 16px; color: #1C2433; background: transparent; border: 1px solid transparent; cursor: pointer">Devices</button>
+<button type="button" style="min-height: 48px; padding: 0 16px; border-radius: 10px; text-align: left; font-size: 16px; color: #1C2433; background: transparent; border: 1px solid transparent; cursor: pointer">Diagnostics</button>
+</nav>
+
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 24px 32px 48px; display: flex; flex-direction: column; gap: 24px">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+<div>
+<h1 style="margin: 0; font-size: 30px; line-height: 38px; font-weight: 600">Terminal health</h1>
+<p style="margin: 4px 0 0; font-size: 15px; line-height: 22px; color: #4F5968">Checks run every 30 seconds. Sample data shown.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<button type="button" style="min-height: 44px; padding: 0 20px; border-radius: 10px; font-size: 15px; font-weight: 600; color: #FFFFFF; background: #0E6B6B; border: 1px solid #0E6B6B; cursor: pointer">Run all checks</button>
+<button type="button" style="min-height: 44px; padding: 0 20px; border-radius: 10px; font-size: 15px; font-weight: 600; color: #1C2433; background: #FFFFFF; border: 1px solid #1C2433; cursor: pointer">Export diagnostics</button>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 16px">
+<div style="box-sizing: border-box; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6">
+<div style="font-size: 13px; line-height: 18px; color: #4F5968">Overall</div>
+<div style="margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: 24px; line-height: 30px; font-weight: 600"><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 L14.5 13.5 H1.5 Z" fill="#A15C00"/></svg><span>Degraded</span></div>
+</div>
+<div style="box-sizing: border-box; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6">
+<div style="font-size: 13px; line-height: 18px; color: #4F5968">Healthy</div>
+<div style="margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: 24px; line-height: 30px; font-weight: 600"><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg><span>6 checks</span></div>
+</div>
+<div style="box-sizing: border-box; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6">
+<div style="font-size: 13px; line-height: 18px; color: #4F5968">Degraded</div>
+<div style="margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: 24px; line-height: 30px; font-weight: 600"><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 L14.5 13.5 H1.5 Z" fill="#A15C00"/></svg><span>1 check</span></div>
+</div>
+<div style="box-sizing: border-box; padding: 16px 20px; border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6">
+<div style="font-size: 13px; line-height: 18px; color: #4F5968">Unhealthy</div>
+<div style="margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: 24px; line-height: 30px; font-weight: 600"><svg width="20" height="20" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="#B42318"/></svg><span>0 checks</span></div>
+</div>
+</div>
+
+<div style="border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6; overflow-x: auto">
+<table style="width: 100%; min-width: 640px; border-collapse: collapse; font-size: 15px; line-height: 22px">
+<thead>
+<tr style="text-align: left; background: #ECE9E1">
+<th scope="col" style="padding: 12px 20px; font-weight: 600">Check</th>
+<th scope="col" style="padding: 12px 20px; font-weight: 600">State</th>
+<th scope="col" style="padding: 12px 20px; font-weight: 600">Last run</th>
+<th scope="col" style="padding: 12px 20px; font-weight: 600">Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">Database</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg>Healthy</span></td><td style="padding: 12px 20px; color: #4F5968">30 s ago</td><td style="padding: 12px 20px; color: #4F5968">Integrity check passed</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">Disk space</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg>Healthy</span></td><td style="padding: 12px 20px; color: #4F5968">30 s ago</td><td style="padding: 12px 20px; color: #4F5968">Above the warning threshold</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">Configuration</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg>Healthy</span></td><td style="padding: 12px 20px; color: #4F5968">30 s ago</td><td style="padding: 12px 20px; color: #4F5968">Validated, last-known-good saved</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">Memory</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg>Healthy</span></td><td style="padding: 12px 20px; color: #4F5968">30 s ago</td><td style="padding: 12px 20px; color: #4F5968">Within the process limit</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">Event bus</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 L14.5 13.5 H1.5 Z" fill="#A15C00"/></svg>Degraded</span></td><td style="padding: 12px 20px; color: #4F5968">30 s ago</td><td style="padding: 12px 20px; color: #4F5968">Backlog above the warning threshold</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">Devices</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg>Healthy</span></td><td style="padding: 12px 20px; color: #4F5968">30 s ago</td><td style="padding: 12px 20px; color: #4F5968">Device simulator connected</td></tr>
+<tr style="border-top: 1px solid #D8D3C6"><td style="padding: 12px 20px; font-weight: 600">Monitoring link</td><td style="padding: 12px 20px"><span style="display: inline-flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#0E6B6B"/></svg>Healthy</span></td><td style="padding: 12px 20px; color: #4F5968">30 s ago</td><td style="padding: 12px 20px; color: #4F5968">Last heartbeat accepted</td></tr>
+</tbody>
+</table>
+</div>
+
+<section aria-labelledby="recent-errors" style="display: flex; flex-direction: column; gap: 12px">
+<h2 id="recent-errors" style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 600">Recent errors</h2>
+<div style="border-radius: 12px; background: #FFFFFF; border: 1px solid #D8D3C6; overflow-x: auto">
+<div style="min-width: 560px; box-sizing: border-box; padding: 14px 20px; display: grid; grid-template-columns: 110px 100px 1fr 120px; gap: 16px; align-items: center; font-size: 15px; line-height: 22px"><span style="font-weight: 600">ATM-2041</span><span>Warning</span><span style="color: #4F5968">Event handler retried after a transient fault</span><span style="color: #4F5968">12 min ago</span></div>
+<div style="min-width: 560px; box-sizing: border-box; padding: 14px 20px; display: grid; grid-template-columns: 110px 100px 1fr 120px; gap: 16px; align-items: center; font-size: 15px; line-height: 22px; border-top: 1px solid #D8D3C6"><span style="font-weight: 600">ATM-3107</span><span>Warning</span><span style="color: #4F5968">Heartbeat queued while the monitoring link was down</span><span style="color: #4F5968">1 hour ago</span></div>
+<div style="min-width: 560px; box-sizing: border-box; padding: 14px 20px; display: grid; grid-template-columns: 110px 100px 1fr 120px; gap: 16px; align-items: center; font-size: 15px; line-height: 22px; border-top: 1px solid #D8D3C6"><span style="font-weight: 600">ATM-1012</span><span>Error</span><span style="color: #4F5968">Configuration reload rejected, last-known-good kept</span><span style="color: #4F5968">Yesterday</span></div>
+</div>
+</section>
+
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

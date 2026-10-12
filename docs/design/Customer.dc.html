@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ATM customer flow</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+button:focus-visible{outline:3px solid #F2F4F7;outline-offset:3px}
+</style>
+</helmet>
+<div style="width: 1024px; height: 768px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; background: #0F1B2D; color: #F2F4F7; font-family: 'IBM Plex Sans', system-ui, sans-serif">
+
+<div style="height: 72px; box-sizing: border-box; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2B4466">
+<div style="font-size: 24px; font-weight: 600; letter-spacing: 0.02em">[BANK NAME]</div>
+<div style="font-size: 18px; color: #B4C0D2">Terminal [ATM-0001]</div>
+</div>
+
+<div style="flex: 1; min-height: 0; box-sizing: border-box; padding: 0 64px; display: flex; align-items: center; justify-content: center">
+
+<sc-if value="{{isWelcome}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 28px; text-align: center">
+<h1 style="margin: 0; font-size: 72px; line-height: 80px; font-weight: 600">Welcome</h1>
+<p style="margin: 0; font-size: 30px; line-height: 40px; color: #B4C0D2">Insert your card to begin</p>
+<svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke="{{accent}}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M32 8 V50"/><path d="M16 36 L32 52 L48 36"/></svg>
+<div style="width: 400px; height: 28px; border-radius: 14px; background: #070E1A; border: 2px solid #36527A"></div>
+<button type="button" onClick="{{startSession}}" style="min-height: 72px; padding: 0 40px; border-radius: 14px; font-size: 24px; font-weight: 600; color: #0A1424; background: {{accent}}; border: 2px solid {{accent}}; cursor: pointer">Insert card (prototype)</button>
+</div>
+</sc-if>
+
+<sc-if value="{{isPin}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; gap: 64px">
+<div style="width: 380px; display: flex; flex-direction: column; align-items: flex-start; gap: 24px">
+<h1 style="margin: 0; font-size: 48px; line-height: 56px; font-weight: 600">Enter your PIN</h1>
+<p style="margin: 0; font-size: 22px; line-height: 30px; color: #B4C0D2">Use the keypad. 4 to 6 digits. Shield the keypad when you type.</p>
+<div style="display: flex; gap: 14px" aria-label="PIN digits entered">
+<sc-for list="{{dots}}" as="dot" hint-placeholder-count="6">
+<sc-if value="{{dot.on}}" hint-placeholder-val="{{ false }}">
+<div style="width: 28px; height: 28px; border-radius: 14px; box-sizing: border-box; background: {{accent}}; border: 2px solid {{accent}}"></div>
+</sc-if>
+<sc-if value="{{dot.off}}" hint-placeholder-val="{{ true }}">
+<div style="width: 28px; height: 28px; border-radius: 14px; box-sizing: border-box; background: transparent; border: 2px solid #5E7BA6"></div>
+</sc-if>
+</sc-for>
+</div>
+<button type="button" onClick="{{cancel}}" style="min-height: 64px; padding: 0 28px; border-radius: 14px; font-size: 22px; font-weight: 600; color: #F5C26B; background: transparent; border: 2px solid #F0B454; cursor: pointer">Cancel and return card</button>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, 112px); gap: 16px">
+<sc-for list="{{keys}}" as="key" hint-placeholder-count="9">
+<button type="button" onClick="{{key.press}}" style="width: 112px; height: 80px; border-radius: 14px; font-size: 32px; font-weight: 600; color: #F2F4F7; background: #1F3553; border: 2px solid #36527A; cursor: pointer">{{key.label}}</button>
+</sc-for>
+<button type="button" onClick="{{clearPin}}" style="width: 112px; height: 80px; border-radius: 14px; font-size: 22px; font-weight: 600; color: #F5C26B; background: transparent; border: 2px solid #F0B454; cursor: pointer">Clear</button>
+<button type="button" onClick="{{pressZero}}" style="width: 112px; height: 80px; border-radius: 14px; font-size: 32px; font-weight: 600; color: #F2F4F7; background: #1F3553; border: 2px solid #36527A; cursor: pointer">0</button>
+<button type="button" onClick="{{enterPin}}" style="width: 112px; height: 80px; border-radius: 14px; font-size: 22px; font-weight: 600; color: #0A1424; background: {{accent}}; border: 2px solid {{accent}}; cursor: pointer">Enter</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isMenu}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 24px">
+<h1 style="margin: 0; font-size: 44px; line-height: 52px; font-weight: 600; text-align: center">What would you like to do?</h1>
+<div style="display: grid; grid-template-columns: repeat(3, 270px); gap: 20px">
+<sc-for list="{{tiles}}" as="tile" hint-placeholder-count="6">
+<button type="button" onClick="{{tile.pick}}" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 270px; height: 140px; border-radius: 18px; color: #F2F4F7; background: #17283F; border: 2px solid #36527A; cursor: pointer"><span style="font-size: 26px; line-height: 32px; font-weight: 600">{{tile.label}}</span><span style="font-size: 18px; line-height: 24px; color: #B4C0D2">{{tile.sub}}</span></button>
+</sc-for>
+</div>
+<div style="height: 28px; font-size: 18px; line-height: 28px; color: #F5C26B">{{note}}</div>
+<button type="button" onClick="{{cancel}}" style="min-height: 64px; padding: 0 28px; border-radius: 14px; font-size: 22px; font-weight: 600; color: #F5C26B; background: transparent; border: 2px solid #F0B454; cursor: pointer">Cancel and return card</button>
+</div>
+</sc-if>
+
+<sc-if value="{{isAmount}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 24px">
+<h1 style="margin: 0; font-size: 44px; line-height: 52px; font-weight: 600; text-align: center">Select an amount</h1>
+<div style="display: grid; grid-template-columns: repeat(3, 270px); gap: 20px">
+<sc-for list="{{amounts}}" as="amt" hint-placeholder-count="5">
+<button type="button" onClick="{{amt.pick}}" style="width: 270px; height: 110px; border-radius: 18px; font-size: 44px; font-weight: 600; color: #F2F4F7; background: #17283F; border: 2px solid #36527A; cursor: pointer">{{amt.label}}</button>
+</sc-for>
+<button type="button" onClick="{{otherAmount}}" style="width: 270px; height: 110px; border-radius: 18px; font-size: 26px; font-weight: 600; color: #F2F4F7; background: #17283F; border: 2px solid #36527A; cursor: pointer">Other amount</button>
+</div>
+<div style="height: 28px; font-size: 18px; line-height: 28px; color: #F5C26B">{{note}}</div>
+<div style="display: flex; gap: 20px">
+<button type="button" onClick="{{backToMenu}}" style="min-height: 64px; padding: 0 28px; border-radius: 14px; font-size: 22px; font-weight: 600; color: #F2F4F7; background: #1F3553; border: 2px solid #36527A; cursor: pointer">Back</button>
+<button type="button" onClick="{{cancel}}" style="min-height: 64px; padding: 0 28px; border-radius: 14px; font-size: 22px; font-weight: 600; color: #F5C26B; background: transparent; border: 2px solid #F0B454; cursor: pointer">Cancel and return card</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isConfirm}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 28px; text-align: center">
+<h1 style="margin: 0; font-size: 56px; line-height: 64px; font-weight: 600">{{confirmTitle}}</h1>
+<p style="margin: 0; font-size: 24px; line-height: 32px; color: #B4C0D2">Your cash is dispensed after you confirm.</p>
+<div style="display: flex; align-items: center; gap: 16px">
+<span style="font-size: 22px; color: #B4C0D2">Receipt</span>
+<button type="button" onClick="{{receiptYes}}" aria-pressed="{{receiptYesPressed}}" style="min-height: 56px; padding: 0 28px; border-radius: 14px; font-size: 22px; font-weight: 600; color: {{yesFg}}; background: {{yesBg}}; border: 2px solid {{yesBorder}}; cursor: pointer">Print</button>
+<button type="button" onClick="{{receiptNo}}" aria-pressed="{{receiptNoPressed}}" style="min-height: 56px; padding: 0 28px; border-radius: 14px; font-size: 22px; font-weight: 600; color: {{noFg}}; background: {{noBg}}; border: 2px solid {{noBorder}}; cursor: pointer">No receipt</button>
+</div>
+<button type="button" onClick="{{confirmWithdrawal}}" style="min-height: 80px; padding: 0 56px; border-radius: 14px; font-size: 28px; font-weight: 600; color: #0A1424; background: {{accent}}; border: 2px solid {{accent}}; cursor: pointer">Confirm withdrawal</button>
+<div style="display: flex; gap: 20px">
+<button type="button" onClick="{{changeAmount}}" style="min-height: 64px; padding: 0 28px; border-radius: 14px; font-size: 22px; font-weight: 600; color: #F2F4F7; background: #1F3553; border: 2px solid #36527A; cursor: pointer">Change amount</button>
+<button type="button" onClick="{{cancel}}" style="min-height: 64px; padding: 0 28px; border-radius: 14px; font-size: 22px; font-weight: 600; color: #F5C26B; background: transparent; border: 2px solid #F0B454; cursor: pointer">Cancel and return card</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isDone}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 28px; text-align: center">
+<svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true" fill="none" stroke="{{accent}}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="36" cy="36" r="30"/><path d="M22 37 L32 47 L51 26"/></svg>
+<h1 style="margin: 0; font-size: 52px; line-height: 60px; font-weight: 600">Please take your card and cash</h1>
+<p style="margin: 0; font-size: 26px; line-height: 34px; color: #B4C0D2">{{doneNote}}</p>
+<button type="button" onClick="{{finish}}" style="min-height: 72px; padding: 0 40px; border-radius: 14px; font-size: 24px; font-weight: 600; color: #0A1424; background: {{accent}}; border: 2px solid {{accent}}; cursor: pointer">Finish</button>
+</div>
+</sc-if>
+
+</div>
+
+<div style="height: 88px; box-sizing: border-box; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #2B4466">
+<div style="font-size: 18px; color: #B4C0D2">Need help? Call [SUPPORT NUMBER]</div>
+<div style="display: flex; gap: 16px">
+<button type="button" style="min-height: 56px; padding: 0 24px; border-radius: 14px; font-size: 18px; font-weight: 600; color: #F2F4F7; background: #1F3553; border: 2px solid #36527A; cursor: pointer">Audio assist</button>
+<button type="button" style="min-height: 56px; padding: 0 24px; border-radius: 14px; font-size: 18px; font-weight: 600; color: #F2F4F7; background: #1F3553; border: 2px solid #36527A; cursor: pointer">Language</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4FD1C0","options":["#4FD1C0","#F0B454","#7FB2FF"]},"currency":{"editor":"text","default":"$"},"$preview":{"width":1024,"height":768}}'>
+class Component extends DCLogic {
+state = { screen: 'welcome', pinLen: 0, amount: 0, receipt: true, note: '' };
+
+go(screen) {
+this.setState({ screen: screen, note: '' });
+}
+
+renderVals() {
+const s = this.state;
+const accent = this.props.accent ?? '#4FD1C0';
+const ccy = this.props.currency ?? '$';
+const addDigit = () => {
+if (this.state.pinLen < 6) this.setState({ pinLen: this.state.pinLen + 1 });
+};
+const notWired = () => this.setState({ note: 'Shown in the full design, not wired in this prototype.' });
+const toAmount = () => this.go('amount');
+
+const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => ({ label: d, press: addDigit }));
+const dots = [0, 1, 2, 3, 4, 5].map((i) => ({ on: i < s.pinLen, off: i >= s.pinLen }));
+const tiles = [
+{ label: 'Withdraw cash', sub: 'Cash from your account', pick: toAmount },
+{ label: 'Fast cash', sub: 'Choose a preset amount', pick: toAmount },
+{ label: 'Balance enquiry', sub: 'See your available balance', pick: notWired },
+{ label: 'Deposit', sub: 'Add cash or cheques', pick: notWired },
+{ label: 'Mini statement', sub: 'Your latest transactions', pick: notWired },
+{ label: 'Change PIN', sub: 'Choose a new PIN', pick: notWired }
+];
+const amounts = [20, 40, 60, 100, 200].map((n) => ({
+label: ccy + n,
+pick: () => this.setState({ amount: n, screen: 'confirm', note: '' })
+}));
+
+return {
+accent: accent,
+isWelcome: s.screen === 'welcome',
+isPin: s.screen === 'pin',
+isMenu: s.screen === 'menu',
+isAmount: s.screen === 'amount',
+isConfirm: s.screen === 'confirm',
+isDone: s.screen === 'done',
+keys: keys,
+dots: dots,
+tiles: tiles,
+amounts: amounts,
+note: s.note,
+confirmTitle: 'Withdraw ' + ccy + s.amount + '?',
+doneNote: s.receipt ? 'Your receipt is printing.' : 'No receipt requested.',
+receiptYesPressed: s.receipt,
+receiptNoPressed: !s.receipt,
+yesBg: s.receipt ? accent : '#1F3553',
+yesFg: s.receipt ? '#0A1424' : '#F2F4F7',
+yesBorder: s.receipt ? accent : '#36527A',
+noBg: s.receipt ? '#1F3553' : accent,
+noFg: s.receipt ? '#F2F4F7' : '#0A1424',
+noBorder: s.receipt ? '#36527A' : accent,
+startSession: () => this.setState({ screen: 'pin', pinLen: 0, note: '' }),
+pressZero: addDigit,
+clearPin: () => this.setState({ pinLen: 0 }),
+enterPin: () => {
+if (this.state.pinLen >= 4) this.setState({ screen: 'menu', pinLen: 0, note: '' });
+},
+cancel: () => this.setState({ screen: 'welcome', pinLen: 0, amount: 0, note: '' }),
+otherAmount: () => this.setState({ note: 'Keypad entry is shown in the full design, not wired in this prototype.' }),
+backToMenu: () => this.go('menu'),
+changeAmount: () => this.go('amount'),
+receiptYes: () => this.setState({ receipt: true }),
+receiptNo: () => this.setState({ receipt: false }),
+confirmWithdrawal: () => this.go('done'),
+finish: () => this.setState({ screen: 'welcome', pinLen: 0, amount: 0, note: '' })
+};
+}
+}
+</script>
+</body>
+</html>
