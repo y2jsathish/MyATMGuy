@@ -42,7 +42,7 @@ public partial class App
         var basePath = AppContext.BaseDirectory;
         var environment = AtmEnvironments.FromEnvironment();
         var keys = KeyProviderFactory.Create(
-            Environment.GetEnvironmentVariable("ATM_KEYS_DIR") ?? Path.Combine(basePath, "keys"),
+            Environment.GetEnvironmentVariable("ATM_KEYS_DIR") ?? System.IO.Path.Combine(basePath, "keys"),
             environment);
         var raw = AtmConfiguration.BuildRaw(basePath, environment);
         var bootstrap = ConfigBootstrap.Load(basePath, environment, new SecretProtector(keys));
