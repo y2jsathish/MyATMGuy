@@ -1,4 +1,6 @@
+using ATM.Application.Audit;
 using ATM.Application.Devices;
+using ATM.Infrastructure.Audit;
 using ATM.Infrastructure.Devices.Simulator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -13,7 +15,10 @@ public static class DependencyInjection
         Action<SimulatorOptions>? configureSimulator = null)
     {
         ArgumentNullException.ThrowIfNull(services);
-        return services.AddSimulatedDevices(configureSimulator);
+        services.AddSimulatedDevices(configureSimulator);
+        services.TryAddSingleton(new AuditFileOptions());
+        services.TryAddSingleton<IAuditStore, JsonLinesAuditStore>();
+        return services;
     }
 
     public static IServiceCollection AddSimulatedDevices(

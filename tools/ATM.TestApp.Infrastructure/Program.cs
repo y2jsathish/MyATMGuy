@@ -82,4 +82,25 @@ await runner.CheckAsync("Offline pin pad raises the offline error code", async (
     Expect.Equal("ATM-4002", error.Code.Code, "Error code");
 });
 
+await runner.CheckAsync("Audit trail is chained and detects tampering", async () =>
+{
+    var path = Path.Combine(Path.GetTempPath(), $"audit-{Guid.NewGuid():N}.jsonl");
+    try
+    {
+        var service = new ATM.Application.Audit.AuditService(
+            new ATM.Infrastructure.Audit.JsonLinesAuditStore(new ATM.Infrastructure.Audit.AuditFileOptions { Path = path }),
+            TimeProvider.System);
+        await service.RecordAsync("tech", "SelfTest", "devices", "ok");
+        await service.RecordAsync("tech", "Dispense", "cash", "ok");
+        Expect.True((await service.VerifyAsync()).IsValid, "Fresh chain should verify.");
+
+        File.WriteAllText(path, File.ReadAllText(path).Replace("\"Outcome\":\"ok\"", "\"Outcome\":\"no\"", StringComparison.Ordinal));
+        Expect.True(!(await service.VerifyAsync()).IsValid, "Edited audit file must fail verification.");
+    }
+    finally
+    {
+        File.Delete(path);
+    }
+});
+
 return runner.Complete(args);

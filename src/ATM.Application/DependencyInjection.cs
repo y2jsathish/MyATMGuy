@@ -1,3 +1,4 @@
+using ATM.Application.Audit;
 using ATM.Application.Devices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -12,6 +13,7 @@ public static class DependencyInjection
 
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<IDeviceSelfTestService, DeviceSelfTestService>();
+        services.TryAddSingleton<IAuditService, AuditService>();
         return services;
     }
 }

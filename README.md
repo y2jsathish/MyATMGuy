@@ -36,4 +36,4 @@ The UI layer is exercised by running `ATM.Host` itself (Maintenance screen runs 
 
 ## Status
 
-Sprint 1 foundation. Next: logging and audit (Sprint 2), persistence, transaction flows, then XFS adapters (Phase 2).
+Sprint 1 foundation plus Sprint 2 audit trail (hash-chained, JSON lines file store). Next: file logging, persistence, transaction flows, then XFS adapters (Phase 2).
