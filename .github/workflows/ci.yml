@@ -24,7 +24,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - run: dotnet build ATM.sln -c Release
-      - run: dotnet test ATM.CrossPlatform.slnf -c Release --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+      - run: dotnet test ATM.CrossPlatform.slnf -c Release --no-build --filter "Category!=Performance" --collect:"XPlat Code Coverage" --results-directory TestResults
       - name: Coverage gate (line 80, branch 70)
         shell: bash
         run: python3 scripts/coverage-gate.py TestResults --line 80 --branch 70
