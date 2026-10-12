@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet build ATM.sln -c Release
+      - run: dotnet test ATM.CrossPlatform.slnf -c Release --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: TestResults/**/coverage.cobertura.xml
+
+  testapps:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - shell: bash
+        run: build/publish-testapps.sh ${{ matrix.rid }}
+      - shell: bash
+        run: |
+          for f in artifacts/testapps/${{ matrix.rid }}/ATM.TestApp.*; do
+            case "$f" in *.pdb) continue;; esac
+            "$f"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: testapps-${{ matrix.rid }}
+          path: |
+            artifacts/testapps/${{ matrix.rid }}/ATM.TestApp.*
+            !artifacts/testapps/${{ matrix.rid }}/*.pdb

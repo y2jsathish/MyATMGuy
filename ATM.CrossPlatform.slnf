@@ -1,0 +1,21 @@
+{
+  "solution": {
+    "path": "ATM.sln",
+    "projects": [
+      "src\\ATM.Application\\ATM.Application.csproj",
+      "src\\ATM.Core\\ATM.Core.csproj",
+      "src\\ATM.Infrastructure\\ATM.Infrastructure.csproj",
+      "src\\ATM.Presentation\\ATM.Presentation.csproj",
+      "tests\\ATM.Application.Tests\\ATM.Application.Tests.csproj",
+      "tests\\ATM.Architecture.Tests\\ATM.Architecture.Tests.csproj",
+      "tests\\ATM.Core.Tests\\ATM.Core.Tests.csproj",
+      "tests\\ATM.Infrastructure.Tests\\ATM.Infrastructure.Tests.csproj",
+      "tests\\ATM.Presentation.Tests\\ATM.Presentation.Tests.csproj",
+      "tools\\ATM.TestApp.Application\\ATM.TestApp.Application.csproj",
+      "tools\\ATM.TestApp.Common\\ATM.TestApp.Common.csproj",
+      "tools\\ATM.TestApp.Core\\ATM.TestApp.Core.csproj",
+      "tools\\ATM.TestApp.Infrastructure\\ATM.TestApp.Infrastructure.csproj",
+      "tools\\ATM.TestApp.Presentation\\ATM.TestApp.Presentation.csproj"
+    ]
+  }
+}

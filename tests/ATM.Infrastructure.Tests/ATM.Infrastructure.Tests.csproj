@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ATM.Infrastructure.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ATM.Infrastructure\ATM.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\ATM.Application\ATM.Application.csproj" />
+    <ProjectReference Include="..\..\src\ATM.Core\ATM.Core.csproj" />
+  </ItemGroup>
+</Project>

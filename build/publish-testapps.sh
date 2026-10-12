@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Publishes each layer test app as a self-contained single file. Usage: build/publish-testapps.sh [rid ...]
+set -euo pipefail
+cd "$(dirname "$0")/.."
+rids=("$@"); [ ${#rids[@]} -eq 0 ] && rids=(win-x64 linux-x64)
+for rid in "${rids[@]}"; do
+  for layer in Core Application Infrastructure Presentation; do
+    dotnet publish "tools/ATM.TestApp.$layer" -c Release -r "$rid" --self-contained \
+      -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true \
+      -o "artifacts/testapps/$rid"
+  done
+done
