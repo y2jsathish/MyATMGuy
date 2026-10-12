@@ -11,10 +11,10 @@
 | UI frozen | Dispatcher blocked | Watchdog logs the missed heartbeats; restart the Host; collect the last log file |
 
 ## Logs
-Rolling JSON lines in `logs\`. Search: `atmlog search <dir> --level Error --since 1h` (see `atmlog --help`). Every line carries terminal id and correlation id; PAN and PIN are masked.
+Rolling JSON lines in `logs\`. Search: `atmlog <log-dir> --level Error --from <time> --max 50` (filters: `--correlation`, `--terminal`, `--text`). Every line carries terminal id and correlation id; PAN and PIN are masked.
 
 ## Backup and restore
-Database backup and restore are in `DatabaseMaintenance` (WAL checkpoint, copy, integrity check). Take a backup before every upgrade. Restore only with the Host stopped.
+Database backup and restore are in `DatabaseMaintenance` (timestamped copy, keeps the newest 7). Take a backup before every upgrade. Restore only with the Host stopped.
 
 ## Key rotation
 `atmcfg rotate-key` adds a new key version; old values stay readable until re-encrypted with `atmcfg encrypt`. Audit key stays derived from v1, so keep v1 until the audit trail is archived.
