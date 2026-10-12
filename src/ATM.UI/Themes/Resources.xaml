@@ -3,6 +3,7 @@
                     xmlns:vm="clr-namespace:ATM.Presentation.ViewModels;assembly=ATM.Presentation"
                     xmlns:views="clr-namespace:ATM.UI.Views">
 
+  <BooleanToVisibilityConverter x:Key="Converter.BoolToVisibility" />
   <SolidColorBrush x:Key="Brush.Surface" Color="#0F1B2D" />
   <SolidColorBrush x:Key="Brush.Panel" Color="#17283F" />
   <SolidColorBrush x:Key="Brush.Border" Color="#36527A" />

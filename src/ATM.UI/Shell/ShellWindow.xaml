@@ -15,6 +15,10 @@
                 Style="{StaticResource Style.Button}" />
       </StackPanel>
     </Border>
+    <Border DockPanel.Dock="Bottom" Padding="24,8" Background="{StaticResource Brush.Panel}"
+            BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0">
+      <TextBlock Text="{Binding Banner}" FontSize="16" Foreground="{StaticResource Brush.TextMuted}" TextTrimming="CharacterEllipsis" />
+    </Border>
     <ContentControl Content="{Binding Current}" />
   </DockPanel>
 </Window>

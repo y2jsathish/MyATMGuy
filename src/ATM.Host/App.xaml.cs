@@ -1,6 +1,8 @@
 using System.Windows;
 using ATM.Application;
 using ATM.Application.Configuration;
+using ATM.Application.Jobs;
+using ATM.Application.Modules;
 using ATM.Infrastructure;
 using ATM.Infrastructure.Configuration;
 using ATM.Infrastructure.Logging;
@@ -10,6 +12,7 @@ using ATM.Presentation.Navigation;
 using ATM.Presentation.ViewModels;
 using ATM.UI;
 using ATM.UI.Shell;
+using System.Windows.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -60,12 +63,14 @@ public partial class App
         builder.Configuration.Sources.Clear();
         builder.Configuration.AddConfiguration(bootstrap.Configuration.WithDecryption(new SecretProtector(keys)));
 
+        builder.Services.Configure<HostOptions>(o => o.ShutdownTimeout = TimeSpan.FromSeconds(10));
         builder.Services.Configure<UiOptions>(builder.Configuration.GetSection(UiOptions.SectionName));
         builder.Services
             .AddAtmConfiguration(raw, bootstrap, environment, keys, basePath)
             .AddApplication()
             .AddInfrastructure()
             .AddAtmPersistence(o => builder.Configuration.GetSection(DatabaseOptions.SectionName).Bind(o))
+            .AddModules(builder.Configuration, new PlatformServicesModule())
             .AddPresentation()
             .AddUi();
 
@@ -82,6 +87,10 @@ public partial class App
             args.Handled = true;
         };
 
+        var watchdog = _host.Services.GetRequiredService<Watchdog>();
+        var heartbeat = new DispatcherTimer(TimeSpan.FromSeconds(5), DispatcherPriority.Normal, (_, _) => watchdog.Beat(), Dispatcher);
+        heartbeat.Start();
+
         _host.Services.GetRequiredService<INavigationService>().NavigateTo<HomeViewModel>();
         _host.Services.GetRequiredService<ShellWindow>().Show();
     }
@@ -90,7 +99,9 @@ public partial class App
     {
         if (_host is not null)
         {
-            await _host.StopAsync();
+            // Flush logs and the database within 10 seconds, then dispose (which closes Serilog and the event bus).
+            using var grace = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            await _host.StopAsync(grace.Token);
             _host.Dispose();
         }
 

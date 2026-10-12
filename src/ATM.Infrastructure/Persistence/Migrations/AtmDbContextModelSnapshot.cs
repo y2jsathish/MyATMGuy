@@ -110,6 +110,44 @@ namespace ATM.Infrastructure.Persistence.Migrations
                     b.ToTable("Configuration", (string)null);
                 });
 
+            modelBuilder.Entity("ATM.Core.Entities.DeadLetter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Error")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("FailedUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Handler")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FailedUtc");
+
+                    b.ToTable("DeadLetters", (string)null);
+                });
+
             modelBuilder.Entity("ATM.Core.Entities.Device", b =>
                 {
                     b.Property<Guid>("Id")

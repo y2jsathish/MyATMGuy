@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using ATM.Application.Audit;
 using ATM.Application.Errors;
+using ATM.Application.Events;
 using ATM.Application.Persistence;
 using ATM.Core.Entities;
 using ATM.Core.Errors;
@@ -53,6 +54,28 @@ public sealed class SqlitePragmaInterceptor(DatabaseOptions options) : DbConnect
         using var command = connection.CreateCommand();
         command.CommandText = $"PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout={options.BusyTimeoutMs};";
         command.ExecuteNonQuery();
+    }
+}
+
+public sealed class EfDeadLetterStore(IDbContextFactory<AtmDbContext> contexts) : IDeadLetterStore
+{
+    public async Task AddAsync(DeadLetter letter, CancellationToken cancellationToken = default)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        db.DeadLetters.Add(letter with { Error = ATM.Application.Masking.SensitiveDataMasker.Mask(letter.Error), Payload = ATM.Application.Masking.SensitiveDataMasker.Mask(letter.Payload) });
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<DeadLetter>> ListAsync(CancellationToken cancellationToken = default)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        return await db.DeadLetters.AsNoTracking().OrderBy(d => d.FailedUtc).ToListAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task RemoveAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await db.DeadLetters.Where(d => d.Id == id).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 

@@ -29,7 +29,8 @@ public sealed class ConfigReloadService(
     ConfigGovernor governor,
     LiveSettings settings,
     LogLevelController levels,
-    ILogger<ConfigReloadService> logger) : IHostedService, IDisposable
+    ILogger<ConfigReloadService> logger,
+    ATM.Application.Events.IEventBus? bus = null) : IHostedService, IDisposable
 {
     private IDisposable? registration;
 
@@ -48,6 +49,10 @@ public sealed class ConfigReloadService(
         {
             levels.Apply(settings.Get<LoggingOptions>(LoggingOptions.SectionName));
             logger.LogInformation("Configuration reloaded: {ChangeCount} change(s)", result.Changes.Count);
+            if (bus is not null && result.Changes.Count > 0)
+            {
+                await bus.PublishAsync(new ATM.Application.Events.ConfigurationChanged([.. result.Changes.Select(c => c.Key)], "file reload")).ConfigureAwait(false);
+            }
         }
         else
         {

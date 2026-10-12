@@ -40,3 +40,6 @@ public sealed record ErrorRecord(
 
 /// <summary>A configuration value. Secret values are stored encrypted and never logged.</summary>
 public sealed record ConfigItem(string Key, string Value, bool IsSecret, DateTimeOffset UpdatedUtc);
+
+/// <summary>An event that failed all delivery attempts, kept so it can be replayed.</summary>
+public sealed record DeadLetter(Guid Id, string EventType, string Payload, string Handler, string Error, int Attempts, DateTimeOffset FailedUtc);

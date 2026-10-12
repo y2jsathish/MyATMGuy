@@ -64,6 +64,7 @@ public static class DependencyInjection
         var logging = decrypted.GetSection(LoggingOptions.SectionName).Get<LoggingOptions>() ?? new LoggingOptions();
 
         services.AddSingleton(keys);
+        services.AddSingleton(new AtmEnvironmentHolder(environment));
         services.AddSingleton(protector);
         services.AddSingleton<IConfiguration>(decrypted);
         services.AddSingleton(terminal);
@@ -85,7 +86,8 @@ public static class DependencyInjection
             sp.GetRequiredService<ConfigGovernor>(),
             sp.GetRequiredService<LiveSettings>(),
             sp.GetRequiredService<LogLevelController>(),
-            sp.GetRequiredService<ILogger<ConfigReloadService>>()));
+            sp.GetRequiredService<ILogger<ConfigReloadService>>(),
+            sp.GetService<ATM.Application.Events.IEventBus>()));
         services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<ConfigReloadService>());
         return services;
     }

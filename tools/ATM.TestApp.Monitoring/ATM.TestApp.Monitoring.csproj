@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ATM.TestApp.Monitoring</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\ATM.TestApp.Common\ATM.TestApp.Common.csproj" />
+    <ProjectReference Include="..\..\src\ATM.Monitoring.Api\ATM.Monitoring.Api.csproj" />
+    <ProjectReference Include="..\..\src\ATM.Infrastructure\ATM.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\ATM.Application\ATM.Application.csproj" />
+  </ItemGroup>
+</Project>

@@ -27,6 +27,8 @@ public sealed class AtmDbContext(DbContextOptions<AtmDbContext> options) : DbCon
 
     public DbSet<ConfigItem> Configuration => Set<ConfigItem>();
 
+    public DbSet<DeadLetter> DeadLetters => Set<DeadLetter>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<DateTimeOffset>().HaveConversion<DateTimeOffsetToUtcTicks>();
@@ -98,6 +100,16 @@ public sealed class AtmDbContext(DbContextOptions<AtmDbContext> options) : DbCon
             b.Property(x => x.Message).HasMaxLength(2048);
             b.HasIndex(x => x.TimestampUtc);
             b.HasIndex(x => x.CorrelationId);
+        });
+
+        modelBuilder.Entity<DeadLetter>(b =>
+        {
+            b.ToTable("DeadLetters");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.EventType).HasMaxLength(64);
+            b.Property(x => x.Handler).HasMaxLength(128);
+            b.Property(x => x.Error).HasMaxLength(2048);
+            b.HasIndex(x => x.FailedUtc);
         });
 
         modelBuilder.Entity<ConfigItem>(b =>
