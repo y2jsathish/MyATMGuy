@@ -37,3 +37,16 @@ The UI layer is exercised by running `ATM.Host` itself (Maintenance screen runs 
 ## Status
 
 Sprint 1 foundation plus Sprint 2 audit trail (hash-chained, JSON lines file store). Next: file logging, persistence, transaction flows, then XFS adapters (Phase 2).
+
+## Configuration and secrets (Sprint 3)
+
+Layers, lowest to highest precedence: `appsettings.json`, `appsettings.{ATM_ENVIRONMENT}.json`, `terminal.json`, `ATM_` environment variables (use `__` for nesting, e.g. `ATM_Terminal__TerminalId`). Environments: Dev, Sit, Uat, Pilot, Prod (default Dev). Prod forbids debug features and plaintext secrets, and requires `config.manifest`.
+
+```
+echo -n "value" | atmcfg encrypt        # prints enc:v1:... for a config file
+atmcfg verify <config-dir> --env Prod   # validity, plaintext secrets, decryptability, integrity manifest
+atmcfg manifest <config-dir>            # write SHA-256 manifest after editing config
+atmcfg rotate-key
+```
+
+Reloadable at runtime (validated first, last known good kept on failure): Logging levels and Terminal idle timeout. Everything else needs a restart. Schema for editors: `docs/config/atm.schema.json`.

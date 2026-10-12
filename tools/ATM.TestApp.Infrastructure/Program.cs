@@ -138,4 +138,34 @@ await runner.CheckAsync("Logs are written as searchable JSON with PAN masked", a
     }
 });
 
+await runner.CheckAsync("Configuration layers, encryption and last-known-good fallback", async () =>
+{
+    var dir = Path.Combine(Path.GetTempPath(), $"atmcfg-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(dir);
+    try
+    {
+        var protector = new ATM.Application.Configuration.SecretProtector(new ATM.Infrastructure.Configuration.FileKeyProvider(Path.Combine(dir, "keys")));
+        File.WriteAllText(Path.Combine(dir, "appsettings.json"), "{\"Terminal\":{\"TerminalId\":\"BASE-1\"},\"Db\":{\"Password\":\"" + protector.Protect("hunter2") + "\"}}");
+        File.WriteAllText(Path.Combine(dir, "terminal.json"), "{\"Terminal\":{\"TerminalId\":\"TERM-9\"}}");
+
+        var good = ATM.Infrastructure.Configuration.ConfigBootstrap.Load(dir, ATM.Application.Configuration.AtmEnvironment.Dev, protector);
+        Expect.True(good.IsValid, "Valid config reported errors: " + string.Join("; ", good.Errors));
+        Expect.Equal("TERM-9", good.Configuration["Terminal:TerminalId"], "terminal.json must override appsettings.json");
+        Expect.Equal("hunter2", ATM.Infrastructure.Configuration.ConfigurationBuilderExtensions.WithDecryption(good.Configuration, protector)["Db:Password"], "Decrypted secret");
+        Expect.True(!File.ReadAllText(Path.Combine(dir, "appsettings.json")).Contains("hunter2", StringComparison.Ordinal), "Secret is plaintext on disk.");
+
+        ATM.Infrastructure.Configuration.ConfigBootstrap.SaveLastKnownGood(dir, good.Raw);
+        File.WriteAllText(Path.Combine(dir, "terminal.json"), "{\"Terminal\":{\"TerminalId\":\"not valid!\"}}");
+        var fallback = ATM.Infrastructure.Configuration.ConfigBootstrap.Load(dir, ATM.Application.Configuration.AtmEnvironment.Dev, protector);
+        Expect.True(fallback.UsedLastKnownGood, "Expected fallback to last known good.");
+        Expect.Equal("TERM-9", fallback.Configuration["Terminal:TerminalId"], "Fallback value");
+    }
+    finally
+    {
+        Directory.Delete(dir, recursive: true);
+    }
+
+    await Task.CompletedTask;
+});
+
 return runner.Complete(args);

@@ -31,7 +31,8 @@ public sealed class AuditFileOptions
 {
     public string Path { get; set; } = System.IO.Path.Combine(AppContext.BaseDirectory, "logs", "audit.jsonl");
 
-    public string KeyPath { get; set; } = System.IO.Path.Combine(AppContext.BaseDirectory, "keys", "audit.key");
+    /// <summary>Where the default key provider keeps its key files when none is registered explicitly (tests and Dev).</summary>
+    public string KeyDirectory { get; set; } = System.IO.Path.Combine(AppContext.BaseDirectory, "keys");
 }
 
 /// <summary>One JSON object per line, append only. Survives restarts; tampering is caught by the hash chain.</summary>

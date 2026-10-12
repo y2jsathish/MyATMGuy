@@ -15,6 +15,9 @@ public static class ErrorCatalogue
 {
     public static readonly ErrorCode Unknown = new("ATM-0001", ErrorSeverity.High, "Unclassified error.");
     public static readonly ErrorCode InvalidConfiguration = new("ATM-1012", ErrorSeverity.Medium, "Configuration validation failed.");
+    public static readonly ErrorCode ConfigurationRejected = new("ATM-1013", ErrorSeverity.High, "A configuration change was rejected and the last known good configuration is in use.");
+    public static readonly ErrorCode ConfigurationTampered = new("ATM-1014", ErrorSeverity.Critical, "A configuration file does not match its recorded hash.");
+    public static readonly ErrorCode SecretUnavailable = new("ATM-1015", ErrorSeverity.High, "A protected value could not be decrypted.");
     public static readonly ErrorCode DeviceFault = new("ATM-4001", ErrorSeverity.High, "A device reported a fault.");
     public static readonly ErrorCode DeviceOffline = new("ATM-4002", ErrorSeverity.High, "A device is offline.");
     public static readonly ErrorCode TransactionStateInvalid = new("ATM-5001", ErrorSeverity.Medium, "The transaction is not in a valid state for this operation.");
@@ -23,6 +26,9 @@ public static class ErrorCatalogue
     [
         Unknown,
         InvalidConfiguration,
+        ConfigurationRejected,
+        ConfigurationTampered,
+        SecretUnavailable,
         DeviceFault,
         DeviceOffline,
         TransactionStateInvalid,

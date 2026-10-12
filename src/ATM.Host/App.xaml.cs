@@ -1,6 +1,8 @@
 using System.Windows;
 using ATM.Application;
+using ATM.Application.Configuration;
 using ATM.Infrastructure;
+using ATM.Infrastructure.Configuration;
 using ATM.Infrastructure.Logging;
 using ATM.Presentation;
 using ATM.Presentation.Navigation;
@@ -36,8 +38,30 @@ public partial class App
             ValidateOnBuild = true,
         }));
 
+        var basePath = AppContext.BaseDirectory;
+        var environment = AtmEnvironments.FromEnvironment();
+        var keys = KeyProviderFactory.Create(
+            Environment.GetEnvironmentVariable("ATM_KEYS_DIR") ?? Path.Combine(basePath, "keys"),
+            environment);
+        var raw = AtmConfiguration.BuildRaw(basePath, environment);
+        var bootstrap = ConfigBootstrap.Load(basePath, environment, new SecretProtector(keys));
+        if (!bootstrap.IsValid && !bootstrap.UsedLastKnownGood)
+        {
+            MessageBox.Show(
+                "The terminal cannot start because its configuration is invalid:\n\n" + string.Join("\n", bootstrap.Errors),
+                "ATM configuration error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Shutdown(1);
+            return;
+        }
+
+        builder.Configuration.Sources.Clear();
+        builder.Configuration.AddConfiguration(bootstrap.Configuration.WithDecryption(new SecretProtector(keys)));
+
         builder.Services.Configure<UiOptions>(builder.Configuration.GetSection(UiOptions.SectionName));
         builder.Services
+            .AddAtmConfiguration(raw, bootstrap, environment, keys, basePath)
             .AddApplication()
             .AddInfrastructure()
             .AddPresentation()

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using ATM.Application.Correlation;
 using ATM.Application.Masking;
 using ATM.Application.Terminal;
@@ -14,6 +15,7 @@ public sealed class LoggingOptions
 {
     public const string SectionName = "Logging";
 
+    [RegularExpression("^(Verbose|Debug|Information|Warning|Error|Fatal)$", ErrorMessage = "MinimumLevel must be Verbose, Debug, Information, Warning, Error or Fatal.")]
     public string MinimumLevel { get; set; } = "Information";
 
     /// <summary>Per namespace minimum levels, e.g. { "ATM.Infrastructure": "Debug" }.</summary>
@@ -21,10 +23,13 @@ public sealed class LoggingOptions
 
     public string Directory { get; set; } = Path.Combine(AppContext.BaseDirectory, "logs");
 
+    [Required]
     public string FileName { get; set; } = "atm-.clef";
 
+    [Range(1024, 1024L * 1024 * 1024)]
     public long FileSizeLimitBytes { get; set; } = 50L * 1024 * 1024;
 
+    [Range(1, 3650)]
     public int RetainedFileCount { get; set; } = 30;
 
     public bool WindowsEventLog { get; set; }

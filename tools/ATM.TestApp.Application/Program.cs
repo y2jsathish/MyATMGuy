@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using ATM.Application.Configuration;
 using ATM.Application.Correlation;
 using ATM.Application.Devices;
 using ATM.Application.Masking;
@@ -80,7 +82,46 @@ await runner.CheckAsync("Correlation ID survives await and child tasks", async (
     Expect.Equal(id, await Task.Run(() => CorrelationContext.Current), "Correlation ID in child task");
 });
 
+runner.Check("Secrets round-trip, rotate keys and detect tampering", () =>
+{
+    var keys = new TestKeys();
+    var protector = new SecretProtector(keys);
+    var cipher = protector.Protect("hunter2");
+    Expect.True(cipher.StartsWith("enc:v1:", StringComparison.Ordinal) && !cipher.Contains("hunter2", StringComparison.Ordinal), "Ciphertext format or leak.");
+    Expect.Equal("hunter2", protector.Unprotect(cipher), "Decrypted value");
+
+    keys.Rotate();
+    Expect.Equal("hunter2", protector.Unprotect(cipher), "Old value after rotation");
+    Expect.True(protector.Protect("x").StartsWith("enc:v2:", StringComparison.Ordinal), "New values must use the new key version.");
+
+    Expect.Throws<ATM.Core.Errors.AtmException>(() => protector.Unprotect(cipher[..^4] + "AAAA"));
+});
+
+runner.Check("Config differences are detected and secrets flagged", () =>
+{
+    var changes = ConfigDiff.Compare(
+        new Dictionary<string, string?> { ["A:Level"] = "Info", ["A:Password"] = "enc:v1:a" },
+        new Dictionary<string, string?> { ["A:Level"] = "Debug", ["A:Password"] = "enc:v1:b" });
+    Expect.Equal(2, changes.Count, "Changes");
+    Expect.True(changes.Single(c => c.Key == "A:Password").IsSecret, "Password change must be flagged secret.");
+});
+
 return runner.Complete(args);
+
+internal sealed class TestKeys : IKeyProvider
+{
+    private readonly List<byte[]> keys = [RandomNumberGenerator.GetBytes(32)];
+
+    public int CurrentVersion => keys.Count;
+
+    public KeyMaterial GetKey(int version) => new(version, keys[version - 1]);
+
+    public int Rotate()
+    {
+        keys.Add(RandomNumberGenerator.GetBytes(32));
+        return keys.Count;
+    }
+}
 
 internal sealed class StubPort(DeviceKind kind, DeviceStatus status, bool throws = false, bool honourCancellation = false) : IDevicePort
 {

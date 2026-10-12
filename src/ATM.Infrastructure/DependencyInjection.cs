@@ -1,8 +1,14 @@
+using System.Security.Cryptography;
 using ATM.Application.Audit;
+using ATM.Application.Configuration;
+using ATM.Application.Errors;
 using ATM.Application.Devices;
 using ATM.Application.Terminal;
 using ATM.Infrastructure.Audit;
+using ATM.Infrastructure.Configuration;
 using ATM.Infrastructure.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using ATM.Infrastructure.Devices.Simulator;
@@ -27,9 +33,58 @@ public static class DependencyInjection
         configureAudit?.Invoke(audit);
         services.TryAddSingleton(audit);
         services.TryAddSingleton<IAuditStore, JsonLinesAuditStore>();
-        services.TryAddSingleton(sp => AuditKeyLoader.LoadOrCreate(sp.GetRequiredService<AuditFileOptions>().KeyPath));
+        services.TryAddSingleton<IKeyProvider>(sp => KeyProviderFactory.Create(
+            sp.GetRequiredService<AuditFileOptions>().KeyDirectory,
+            AtmEnvironment.Dev));
+        services.TryAddSingleton<SecretProtector>();
+        services.TryAddSingleton(sp => AuditKeyDerivation.Derive(sp.GetRequiredService<IKeyProvider>()));
 
         return services.AddAtmLogging(configureLogging);
+    }
+
+    /// <summary>
+    /// Registers layered, validated, decrypted configuration with last-known-good and runtime reload.
+    /// Call before AddApplication and AddInfrastructure so these registrations take precedence.
+    /// </summary>
+    public static IServiceCollection AddAtmConfiguration(
+        this IServiceCollection services,
+        IConfigurationRoot raw,
+        BootstrapResult bootstrap,
+        AtmEnvironment environment,
+        IKeyProvider keys,
+        string basePath)
+    {
+        var protector = new SecretProtector(keys);
+        var decrypted = bootstrap.Configuration.WithDecryption(protector);
+
+        var terminal = decrypted.GetSection(TerminalOptions.SectionName).Get<TerminalOptions>() ?? new TerminalOptions();
+        var logging = decrypted.GetSection(LoggingOptions.SectionName).Get<LoggingOptions>() ?? new LoggingOptions();
+
+        services.AddSingleton(keys);
+        services.AddSingleton(protector);
+        services.AddSingleton<IConfiguration>(decrypted);
+        services.AddSingleton(terminal);
+        services.AddSingleton(logging);
+        services.AddSingleton(new TerminalInfo(terminal.TerminalId, TerminalInfo.FromEnvironment().Version, Environment.MachineName));
+        services.AddSingleton(sp =>
+        {
+            var governor = new ConfigGovernor(
+                flat => AtmConfiguration.Validate(flat, environment),
+                sp.GetRequiredService<IAuditService>(),
+                sp.GetRequiredService<IErrorCounters>(),
+                snapshot => ConfigBootstrap.SaveLastKnownGood(basePath, snapshot));
+            governor.Initialize(bootstrap.Raw);
+            return governor;
+        });
+        services.AddSingleton<LiveSettings>();
+        services.AddSingleton(sp => new ConfigReloadService(
+            raw,
+            sp.GetRequiredService<ConfigGovernor>(),
+            sp.GetRequiredService<LiveSettings>(),
+            sp.GetRequiredService<LogLevelController>(),
+            sp.GetRequiredService<ILogger<ConfigReloadService>>()));
+        services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<ConfigReloadService>());
+        return services;
     }
 
     /// <summary>Serilog behind Microsoft.Extensions.Logging, with masking, enrichment, rolling files and runtime level control.</summary>

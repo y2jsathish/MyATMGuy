@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ATM Platform configuration",
+  "type": "object",
+  "properties": {
+    "Terminal": {
+      "type": "object",
+      "properties": {
+        "DebugFeatures": {
+          "type": "boolean"
+        },
+        "IdleTimeoutSeconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 600
+        },
+        "TerminalId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,32}$"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "TerminalId"
+      ]
+    },
+    "Logging": {
+      "type": "object",
+      "properties": {
+        "Directory": {
+          "type": "string"
+        },
+        "EventLogSource": {
+          "type": "string"
+        },
+        "FileName": {
+          "type": "string"
+        },
+        "FileSizeLimitBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1073741824
+        },
+        "MinimumLevel": {
+          "type": "string",
+          "pattern": "^(Verbose|Debug|Information|Warning|Error|Fatal)$"
+        },
+        "Overrides": {
+          "type": "object"
+        },
+        "RetainedFileCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3650
+        },
+        "WindowsEventLog": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "FileName"
+      ]
+    }
+  }
+}
