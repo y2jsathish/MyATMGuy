@@ -1,4 +1,5 @@
 using ATM.Application.Audit;
+using ATM.Application.Terminal;
 using ATM.Core.Entities;
 
 namespace ATM.Application.Tests;
@@ -22,7 +23,7 @@ public class AuditTests
     private static async Task<(AuditService Service, ListStore Store)> Seeded()
     {
         var store = new ListStore();
-        var service = new AuditService(store, TimeProvider.System);
+        var service = new AuditService(store, TimeProvider.System, new AuditSigningKey(new byte[32]), new TerminalInfo("ATM-0001", "1.0", "test"));
         await service.RecordAsync("system", "Start", "terminal", "ok");
         await service.RecordAsync("tech", "SelfTest", "devices", "ok");
         await service.RecordAsync("tech", "Dispense", "cash", "fail");
@@ -66,6 +67,40 @@ public class AuditTests
         store.Items.RemoveAt(1);
 
         (await service.VerifyAsync()).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task WrongKey_FailsVerification()
+    {
+        var (_, store) = await Seeded();
+        var other = new AuditService(store, TimeProvider.System, new AuditSigningKey(Enumerable.Repeat((byte)7, 32).ToArray()), new TerminalInfo("ATM-0001", "1.0", "test"));
+
+        (await other.VerifyAsync()).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ReorderedEntries_AreDetected()
+    {
+        var (service, store) = await Seeded();
+        (store.Items[1], store.Items[2]) = (store.Items[2], store.Items[1]);
+
+        (await service.VerifyAsync()).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Entry_CarriesTerminalCategoryAndAmbientCorrelation()
+    {
+        var (service, _) = await Seeded();
+        var id = ATM.Core.ValueObjects.CorrelationId.New();
+        ATM.Core.Entities.AuditEntry entry;
+        using (ATM.Application.Correlation.CorrelationContext.Begin(id))
+        {
+            entry = await service.RecordAsync("op", "Login", "ui", "ok", ATM.Core.Entities.AuditCategory.Security);
+        }
+
+        entry.Terminal.Should().Be("ATM-0001");
+        entry.Category.Should().Be(ATM.Core.Entities.AuditCategory.Security);
+        entry.CorrelationId.Should().Be(id);
     }
 
     [Fact]

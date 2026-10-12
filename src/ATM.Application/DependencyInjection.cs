@@ -1,4 +1,6 @@
 using ATM.Application.Audit;
+using ATM.Application.Errors;
+using ATM.Application.Terminal;
 using ATM.Application.Devices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -13,6 +15,8 @@ public static class DependencyInjection
 
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<IDeviceSelfTestService, DeviceSelfTestService>();
+        services.TryAddSingleton(_ => TerminalInfo.FromEnvironment());
+        services.TryAddSingleton<IErrorCounters, ErrorCounters>();
         services.TryAddSingleton<IAuditService, AuditService>();
         return services;
     }

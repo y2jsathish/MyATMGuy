@@ -1,6 +1,7 @@
 using System.Windows;
 using ATM.Application;
 using ATM.Infrastructure;
+using ATM.Infrastructure.Logging;
 using ATM.Presentation;
 using ATM.Presentation.Navigation;
 using ATM.Presentation.ViewModels;
@@ -44,6 +45,14 @@ public partial class App
 
         _host = builder.Build();
         await _host.StartAsync();
+
+        var hooks = _host.Services.GetRequiredService<UnhandledExceptionHooks>();
+        hooks.Install();
+        DispatcherUnhandledException += (_, args) =>
+        {
+            hooks.Handle(args.Exception, "Dispatcher");
+            args.Handled = true;
+        };
 
         _host.Services.GetRequiredService<INavigationService>().NavigateTo<HomeViewModel>();
         _host.Services.GetRequiredService<ShellWindow>().Show();

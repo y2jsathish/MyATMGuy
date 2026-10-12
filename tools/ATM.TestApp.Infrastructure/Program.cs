@@ -89,7 +89,9 @@ await runner.CheckAsync("Audit trail is chained and detects tampering", async ()
     {
         var service = new ATM.Application.Audit.AuditService(
             new ATM.Infrastructure.Audit.JsonLinesAuditStore(new ATM.Infrastructure.Audit.AuditFileOptions { Path = path }),
-            TimeProvider.System);
+            TimeProvider.System,
+            new ATM.Application.Audit.AuditSigningKey(new byte[32]),
+            new ATM.Application.Terminal.TerminalInfo("ATM-0001", "1.0", "testapp"));
         await service.RecordAsync("tech", "SelfTest", "devices", "ok");
         await service.RecordAsync("tech", "Dispense", "cash", "ok");
         Expect.True((await service.VerifyAsync()).IsValid, "Fresh chain should verify.");
@@ -100,6 +102,39 @@ await runner.CheckAsync("Audit trail is chained and detects tampering", async ()
     finally
     {
         File.Delete(path);
+    }
+});
+
+await runner.CheckAsync("Logs are written as searchable JSON with PAN masked", async () =>
+{
+    var dir = Path.Combine(Path.GetTempPath(), $"atmlogs-{Guid.NewGuid():N}");
+    try
+    {
+        var info = new ATM.Application.Terminal.TerminalInfo("ATM-0099", "1.0", "testapp");
+        using (var logger = ATM.Infrastructure.Logging.AtmLogging.Create(
+                   new ATM.Infrastructure.Logging.LoggingOptions { Directory = dir }, info, new ATM.Infrastructure.Logging.LogLevelController()))
+        using (ATM.Application.Correlation.CorrelationContext.Begin())
+        {
+            logger.Information("Card 4111111111111111 inserted");
+            logger.Error("Dispense failed");
+        }
+
+        var found = new List<ATM.Infrastructure.Logging.LogLine>();
+        await foreach (var line in ATM.Infrastructure.Logging.LogSearch.SearchAsync(dir, new ATM.Infrastructure.Logging.LogQuery(MinimumLevel: "Information")))
+        {
+            found.Add(line);
+        }
+
+        Expect.Equal(2, found.Count, "Log lines");
+        Expect.True(found.All(l => !l.Raw.Contains("4111111111111111", StringComparison.Ordinal)), "Full PAN reached the log file.");
+        Expect.True(found.All(l => l.Terminal == "ATM-0099" && l.CorrelationId is not null), "Terminal or correlation ID missing.");
+    }
+    finally
+    {
+        if (Directory.Exists(dir))
+        {
+            Directory.Delete(dir, recursive: true);
+        }
     }
 });
 

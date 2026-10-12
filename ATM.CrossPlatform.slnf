@@ -15,7 +15,8 @@
       "tools\\ATM.TestApp.Common\\ATM.TestApp.Common.csproj",
       "tools\\ATM.TestApp.Core\\ATM.TestApp.Core.csproj",
       "tools\\ATM.TestApp.Infrastructure\\ATM.TestApp.Infrastructure.csproj",
-      "tools\\ATM.TestApp.Presentation\\ATM.TestApp.Presentation.csproj"
+      "tools\\ATM.TestApp.Presentation\\ATM.TestApp.Presentation.csproj",
+      "tools\\ATM.LogViewer\\ATM.LogViewer.csproj"
     ]
   }
 }

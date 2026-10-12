@@ -1,4 +1,6 @@
+using ATM.Application.Correlation;
 using ATM.Application.Devices;
+using ATM.Application.Masking;
 using ATM.Core.Devices;
 using ATM.TestApp.Common;
 
@@ -56,6 +58,26 @@ await runner.CheckAsync("Devices are reported in kind order", async () =>
     var report = await service.RunAsync();
 
     Expect.Equal(DeviceKind.CardReader, report.Devices[0].Kind, "First device");
+});
+
+runner.Check("PAN is masked to first six and last four", () =>
+    Expect.Equal("Card 411111******1111 used", SensitiveDataMasker.Mask("Card 4111111111111111 used")));
+
+runner.Check("PIN, CVV, passwords and track data are redacted", () =>
+{
+    var text = SensitiveDataMasker.Mask("pin=1234 cvv=123 password=hunter2 %B4111111111111111^DOE/J^2512101?");
+    foreach (var secret in new[] { "1234", "123 ", "hunter2", "4111111111111111" })
+    {
+        Expect.True(!text.Contains(secret, StringComparison.Ordinal), $"'{secret}' leaked: {text}");
+    }
+});
+
+await runner.CheckAsync("Correlation ID survives await and child tasks", async () =>
+{
+    using var scope = CorrelationContext.Begin();
+    var id = CorrelationContext.Current;
+    await Task.Delay(5);
+    Expect.Equal(id, await Task.Run(() => CorrelationContext.Current), "Correlation ID in child task");
 });
 
 return runner.Complete(args);
