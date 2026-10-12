@@ -20,7 +20,8 @@
       "tools\\ATM.Cfg\\ATM.Cfg.csproj",
       "src\\ATM.Monitoring.Api\\ATM.Monitoring.Api.csproj",
       "tests\\ATM.Monitoring.Api.Tests\\ATM.Monitoring.Api.Tests.csproj",
-      "tools\\ATM.TestApp.Monitoring\\ATM.TestApp.Monitoring.csproj"
+      "tools\\ATM.TestApp.Monitoring\\ATM.TestApp.Monitoring.csproj",
+      "tests\\ATM.Integration.Tests\\ATM.Integration.Tests.csproj"
     ]
   }
 }

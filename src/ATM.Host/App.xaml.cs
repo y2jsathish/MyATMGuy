@@ -2,9 +2,8 @@ using System.Windows;
 using ATM.Application;
 using ATM.Application.Configuration;
 using ATM.Application.Jobs;
-using ATM.Application.Modules;
 using ATM.Infrastructure;
-using ATM.Infrastructure.Configuration;
+using ATM.Infrastructure.Bootstrap;
 using ATM.Infrastructure.Logging;
 using ATM.Infrastructure.Persistence;
 using ATM.Presentation;
@@ -43,16 +42,14 @@ public partial class App
         }));
 
         var basePath = AppContext.BaseDirectory;
-        var environment = AtmEnvironments.FromEnvironment();
-        var keys = KeyProviderFactory.Create(
-            Environment.GetEnvironmentVariable("ATM_KEYS_DIR") ?? System.IO.Path.Combine(basePath, "keys"),
-            environment);
-        var raw = AtmConfiguration.BuildRaw(basePath, environment);
-        var bootstrap = ConfigBootstrap.Load(basePath, environment, new SecretProtector(keys));
-        if (!bootstrap.IsValid && !bootstrap.UsedLastKnownGood)
+        var start = PlatformBootstrap.Prepare(
+            basePath,
+            AtmEnvironments.FromEnvironment(),
+            Environment.GetEnvironmentVariable("ATM_KEYS_DIR"));
+        if (!start.Configuration.IsValid && !start.Configuration.UsedLastKnownGood)
         {
             MessageBox.Show(
-                "The terminal cannot start because its configuration is invalid:\n\n" + string.Join("\n", bootstrap.Errors),
+                "The terminal cannot start because its configuration is invalid:\n\n" + string.Join("\n", start.Configuration.Errors),
                 "ATM configuration error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
@@ -61,23 +58,19 @@ public partial class App
         }
 
         builder.Configuration.Sources.Clear();
-        builder.Configuration.AddConfiguration(bootstrap.Configuration.WithDecryption(new SecretProtector(keys)));
+        builder.Configuration.AddConfiguration(start.Decrypted);
 
         builder.Services.Configure<HostOptions>(o => o.ShutdownTimeout = TimeSpan.FromSeconds(10));
         builder.Services.Configure<UiOptions>(builder.Configuration.GetSection(UiOptions.SectionName));
         builder.Services
-            .AddAtmConfiguration(raw, bootstrap, environment, keys, basePath)
-            .AddApplication()
-            .AddInfrastructure()
-            .AddAtmPersistence(o => builder.Configuration.GetSection(DatabaseOptions.SectionName).Bind(o))
-            .AddModules(builder.Configuration, new PlatformServicesModule())
+            .AddPlatform(start, builder.Configuration)
             .AddPresentation()
             .AddUi();
 
         _host = builder.Build();
-        await _host.StartAsync();
-
+        // The database must be migrated before any hosted service (jobs, config reload) can touch it.
         await _host.Services.GetRequiredService<DatabaseMaintenance>().InitializeAsync();
+        await _host.StartAsync();
 
         var hooks = _host.Services.GetRequiredService<UnhandledExceptionHooks>();
         hooks.Install();

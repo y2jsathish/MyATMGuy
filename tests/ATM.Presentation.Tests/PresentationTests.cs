@@ -223,6 +223,7 @@ public class SupervisorHealthViewModelTests
     [Fact]
     public void Banner_ShowsNewestNotification()
     {
+        SynchronizationContext.SetSynchronizationContext(null); // the test runner's context would defer the update
         var channel = new UiBannerChannel();
         var shell = new ShellViewModel(Substitute.For<INavigationService>(), channel);
 

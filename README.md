@@ -36,7 +36,13 @@ The UI layer is exercised by running `ATM.Host` itself (Maintenance screen runs 
 
 ## Status
 
-Sprint 1 foundation plus Sprint 2 audit trail (hash-chained, JSON lines file store). Next: file logging, persistence, transaction flows, then XFS adapters (Phase 2).
+Phase 1 Sprints 1 to 6 are built: foundation, logging and audit, configuration and secrets, persistence, platform services (events, health, jobs, resilience, monitoring client and API), and integration, performance and security hardening. Test counts on the last full run: Core 28, Application 109, Infrastructure 80, Presentation 14, Architecture 8, Monitoring API 10, Integration 13 (9 end to end plus 4 performance). Coverage of Core, Application and Infrastructure: 93% line, 86% branch.
+
+The WPF projects (`ATM.UI`, `ATM.Host`) compile only on Windows, so they are verified by Windows CI. Not done and needing hardware or the bank: 72-hour soak, power-cut tests, lab image install, code signing, MSI, XFS adapters (Phase 2).
+
+Docs: `docs/security/threat-model.md`, `docs/security/pci-dss-mapping.md`, `docs/ops/{deployment-guide,runbook,release-checklist}.md`, `docs/architecture/modules.md`, `docs/adr`.
+
+Test apps: Core, Application, Infrastructure, Presentation, Monitoring (`tools/ATM.TestApp.*`), plus `atmlog` (log viewer) and `atmcfg` (config tool).
 
 ## Configuration and secrets (Sprint 3)
 
