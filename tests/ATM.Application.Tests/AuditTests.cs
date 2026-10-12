@@ -16,6 +16,8 @@ public class AuditTests
             return Task.CompletedTask;
         }
 
+        public Task<AuditEntry?> GetLastAsync(CancellationToken cancellationToken = default) => Task.FromResult(Items.LastOrDefault());
+
         public Task<IReadOnlyList<AuditEntry>> ReadAllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<AuditEntry>>([.. Items]);
     }

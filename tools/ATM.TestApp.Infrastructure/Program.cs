@@ -168,4 +168,49 @@ await runner.CheckAsync("Configuration layers, encryption and last-known-good fa
     await Task.CompletedTask;
 });
 
+await runner.CheckAsync("Database: migrate, save, page, back up, restore and keep PAN out of the file", async () =>
+{
+    var dir = Path.Combine(Path.GetTempPath(), $"atmdb-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(dir);
+    try
+    {
+        await using var provider = new ServiceCollection()
+            .AddSingleton(new ATM.Application.Terminal.TerminalInfo("ATM-0001", "1.0", "testapp"))
+            .AddSingleton<ATM.Application.Configuration.IKeyProvider>(new ATM.Infrastructure.Configuration.FileKeyProvider(Path.Combine(dir, "keys")))
+            .AddSingleton<ATM.Application.Configuration.SecretProtector>()
+            .AddSingleton(sp => ATM.Infrastructure.Audit.AuditKeyDerivation.Derive(sp.GetRequiredService<ATM.Application.Configuration.IKeyProvider>()))
+            .AddSingleton(new ATM.Infrastructure.Audit.AuditFileOptions { Path = Path.Combine(dir, "fallback.jsonl") })
+            .AddSingleton<ATM.Application.Errors.IErrorCounters, ATM.Application.Errors.ErrorCounters>()
+            .AddSingleton(TimeProvider.System)
+            .AddSingleton<ATM.Application.Audit.IAuditService, ATM.Application.Audit.AuditService>()
+            .AddAtmPersistence(o => { o.Path = Path.Combine(dir, "atm.db"); o.BackupDirectory = Path.Combine(dir, "backups"); })
+            .BuildServiceProvider();
+
+        var maintenance = provider.GetRequiredService<ATM.Infrastructure.Persistence.DatabaseMaintenance>();
+        await maintenance.InitializeAsync();
+
+        var terminal = ATM.Core.ValueObjects.TerminalId.Create("ATM-0001");
+        await using (var uow = provider.GetRequiredService<ATM.Application.Persistence.IUnitOfWorkFactory>().Create())
+        {
+            await uow.Transactions.AddAsync(ATM.Core.Entities.Transaction.Start(terminal, ATM.Core.Entities.TransactionType.Withdrawal, 40m, ATM.Core.ValueObjects.MaskedPan.FromPan("4111111111111111"), DateTimeOffset.UtcNow));
+            await uow.CommitAsync();
+        }
+
+        await provider.GetRequiredService<ATM.Application.Audit.IAuditService>().RecordAsync("tester", "Withdrawal", "card 4111111111111111", "ok");
+        var backup = await maintenance.BackupAsync();
+        Expect.True(File.Exists(backup), "Backup file missing.");
+        Expect.True(await maintenance.IntegrityOkAsync(), "Integrity check failed on a healthy database.");
+        Expect.True((await provider.GetRequiredService<ATM.Application.Audit.IAuditService>().VerifyAsync()).IsValid, "Audit chain invalid.");
+
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        var text = System.Text.Encoding.Latin1.GetString(File.ReadAllBytes(Path.Combine(dir, "atm.db")));
+        Expect.True(!text.Contains("4111111111111111", StringComparison.Ordinal), "Full PAN found in the database file.");
+    }
+    finally
+    {
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        Directory.Delete(dir, recursive: true);
+    }
+});
+
 return runner.Complete(args);

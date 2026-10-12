@@ -2,11 +2,14 @@ using System.Security.Cryptography;
 using ATM.Application.Audit;
 using ATM.Application.Configuration;
 using ATM.Application.Errors;
+using ATM.Application.Persistence;
 using ATM.Application.Devices;
 using ATM.Application.Terminal;
 using ATM.Infrastructure.Audit;
 using ATM.Infrastructure.Configuration;
 using ATM.Infrastructure.Logging;
+using ATM.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -84,6 +87,30 @@ public static class DependencyInjection
             sp.GetRequiredService<LogLevelController>(),
             sp.GetRequiredService<ILogger<ConfigReloadService>>()));
         services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<ConfigReloadService>());
+        return services;
+    }
+
+    /// <summary>
+    /// SQLite persistence with WAL, repositories, unit of work, migrations and retention. Audit records move to the database,
+    /// falling back to the audit file if a write fails. Call after AddInfrastructure.
+    /// </summary>
+    public static IServiceCollection AddAtmPersistence(this IServiceCollection services, Action<DatabaseOptions>? configure = null, RetentionOptions? retention = null)
+    {
+        var options = new DatabaseOptions();
+        configure?.Invoke(options);
+        services.TryAddSingleton(options);
+        services.TryAddSingleton(retention ?? new RetentionOptions());
+        services.TryAddSingleton<SqlitePragmaInterceptor>();
+        services.AddDbContextFactory<AtmDbContext>((sp, builder) =>
+            builder.UseSqlite(sp.GetRequiredService<DatabaseOptions>().ConnectionString).AddInterceptors(sp.GetRequiredService<SqlitePragmaInterceptor>()));
+        services.TryAddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
+        services.TryAddSingleton<DatabaseMaintenance>();
+
+        services.RemoveAll<IAuditStore>();
+        services.AddSingleton<IAuditStore>(sp => new FallbackAuditStore(
+            new EfAuditStore(sp.GetRequiredService<IDbContextFactory<AtmDbContext>>()),
+            new JsonLinesAuditStore(sp.GetRequiredService<AuditFileOptions>()),
+            sp.GetRequiredService<IErrorCounters>()));
         return services;
     }
 

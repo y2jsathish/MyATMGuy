@@ -34,6 +34,8 @@ internal sealed class MemoryAuditStore : IAuditStore
         return Task.CompletedTask;
     }
 
+    public Task<AuditEntry?> GetLastAsync(CancellationToken cancellationToken = default) => Task.FromResult(Items.LastOrDefault());
+
     public Task<IReadOnlyList<AuditEntry>> ReadAllAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<AuditEntry>>([.. Items]);
 }

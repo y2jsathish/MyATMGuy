@@ -3,6 +3,7 @@ using System.Text.Json;
 using ATM.Application.Configuration;
 using ATM.Core.Errors;
 using ATM.Infrastructure.Logging;
+using ATM.Infrastructure.Persistence;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
 
@@ -34,6 +35,7 @@ public static class AtmConfiguration
 
         Check<TerminalOptions>(configuration, TerminalOptions.SectionName, errors);
         Check<LoggingOptions>(configuration, LoggingOptions.SectionName, errors);
+        Check<DatabaseOptions>(configuration, DatabaseOptions.SectionName, errors);
 
         if (environment == AtmEnvironment.Prod)
         {

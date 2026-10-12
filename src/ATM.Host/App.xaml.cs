@@ -4,6 +4,7 @@ using ATM.Application.Configuration;
 using ATM.Infrastructure;
 using ATM.Infrastructure.Configuration;
 using ATM.Infrastructure.Logging;
+using ATM.Infrastructure.Persistence;
 using ATM.Presentation;
 using ATM.Presentation.Navigation;
 using ATM.Presentation.ViewModels;
@@ -64,11 +65,14 @@ public partial class App
             .AddAtmConfiguration(raw, bootstrap, environment, keys, basePath)
             .AddApplication()
             .AddInfrastructure()
+            .AddAtmPersistence(o => builder.Configuration.GetSection(DatabaseOptions.SectionName).Bind(o))
             .AddPresentation()
             .AddUi();
 
         _host = builder.Build();
         await _host.StartAsync();
+
+        await _host.Services.GetRequiredService<DatabaseMaintenance>().InitializeAsync();
 
         var hooks = _host.Services.GetRequiredService<UnhandledExceptionHooks>();
         hooks.Install();

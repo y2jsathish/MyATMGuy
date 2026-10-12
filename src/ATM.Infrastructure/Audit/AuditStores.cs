@@ -18,6 +18,14 @@ public sealed class InMemoryAuditStore : IAuditStore
         return Task.CompletedTask;
     }
 
+    public Task<AuditEntry?> GetLastAsync(CancellationToken cancellationToken = default)
+    {
+        lock (entries)
+        {
+            return Task.FromResult(entries.LastOrDefault());
+        }
+    }
+
     public Task<IReadOnlyList<AuditEntry>> ReadAllAsync(CancellationToken cancellationToken = default)
     {
         lock (entries)
@@ -53,6 +61,22 @@ public sealed class JsonLinesAuditStore(AuditFileOptions options) : IAuditStore
             }
 
             File.AppendAllText(options.Path, line + Environment.NewLine);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public async Task<AuditEntry?> GetLastAsync(CancellationToken cancellationToken = default) =>
+        (await ReadAllAsync(cancellationToken).ConfigureAwait(false)).LastOrDefault();
+
+    public Task ClearAsync()
+    {
+        lock (sync)
+        {
+            if (File.Exists(options.Path))
+            {
+                File.Delete(options.Path);
+            }
         }
 
         return Task.CompletedTask;
