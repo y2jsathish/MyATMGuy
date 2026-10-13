@@ -154,6 +154,9 @@ public static class Checks
             var self = await host.Services.GetRequiredService<IDeviceSelfTestService>().RunAsync();
             report.Add(S, "device self-test (simulators)", self.Overall == ATM.Core.Devices.DeviceStatus.Ok ? Outcome.Pass : Outcome.Warn, string.Join("; ", self.Devices.Select(d => $"{d.Kind}={d.Status}")));
 
+            var withdrawal = await host.Services.GetRequiredService<ATM.Application.Transactions.CashWithdrawalFlow>().RunAsync(100m);
+            report.Add(S, "withdrawal flow (simulated devices and host)", withdrawal.Result == ATM.Application.Transactions.WithdrawalResult.Completed ? Outcome.Pass : Outcome.Fail, $"{withdrawal.Result}, dispensed {withdrawal.Dispensed}, receipt printed {withdrawal.ReceiptPrinted}");
+
             await TransactionsAsync(report, host.Services, terminalId);
             await EventBusAsync(report, host.Services);
         }

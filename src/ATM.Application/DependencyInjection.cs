@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.TryAddSingleton(_ => TerminalInfo.FromEnvironment());
         services.TryAddSingleton<IErrorCounters, ErrorCounters>();
         services.TryAddSingleton<IAuditService, AuditService>();
+        services.TryAddSingleton<ATM.Application.Transactions.TransactionOptions>();
         return services;
     }
 }
