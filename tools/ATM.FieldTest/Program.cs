@@ -2,6 +2,7 @@ using ATM.FieldTest;
 
 var terminalId = "ATM-FIELD";
 var soakMinutes = 0;
+string? xfsPath = null;
 var outDir = Directory.GetCurrentDirectory();
 for (var i = 0; i < args.Length; i++)
 {
@@ -13,11 +14,15 @@ for (var i = 0; i < args.Length; i++)
         case "--out" when i + 1 < args.Length:
             outDir = args[++i];
             break;
+        case "--xfs-path" when i + 1 < args.Length:
+            xfsPath = args[++i];
+            break;
         case "--terminal-id" when i + 1 < args.Length:
             terminalId = args[++i];
             break;
         case "--help" or "-h" or "/?":
-            Console.WriteLine("atmfieldtest [--soak-minutes N] [--out DIR] [--terminal-id ID]");
+            Console.WriteLine("atmfieldtest [--soak-minutes N] [--out DIR] [--terminal-id ID] [--xfs-path KEY]");
+            Console.WriteLine("  --xfs-path: registry key of the XFS root if it is not HKLM\\SOFTWARE\\XFS, e.g. \"HKLM\\SOFTWARE\\Vendor\\XFS\".");
             Console.WriteLine("  Runs environment, disk, secrets, platform and XFS discovery checks, optionally a soak run, and writes a .txt and .json report.");
             Console.WriteLine("  Exit code 0 = no failures, 1 = at least one failure. It uses temporary folders and does not touch real ATM data.");
             return 0;
@@ -34,7 +39,7 @@ Checks.DiskSync(report);
 Checks.Secrets(report);
 if (OperatingSystem.IsWindows())
 {
-    Checks.Xfs(report);
+    Checks.Xfs(report, xfsPath);
 }
 else
 {

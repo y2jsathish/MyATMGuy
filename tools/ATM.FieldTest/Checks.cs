@@ -92,34 +92,135 @@ public static class Checks
     }
 
     [SupportedOSPlatform("windows")]
-    public static void Xfs(Report report)
+    public static void Xfs(Report report, string? customPath = null)
     {
         const string S = "XFS";
         var found = 0;
-        foreach (var view in new[] { Microsoft.Win32.RegistryView.Registry64, Microsoft.Win32.RegistryView.Registry32 })
+        var views = new[] { Microsoft.Win32.RegistryView.Registry64, Microsoft.Win32.RegistryView.Registry32 };
+        var roots = new List<string>();
+        if (!string.IsNullOrWhiteSpace(customPath))
+        {
+            roots.Add(NormalizeXfsPath(customPath));
+        }
+
+        roots.Add(@"SOFTWARE\XFS");
+        foreach (var view in views)
         {
             using var hive = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, view);
-            using var xfs = hive.OpenSubKey(@"SOFTWARE\XFS");
-            if (xfs is null)
+            foreach (var root in roots)
             {
-                report.Add(S, $"HKLM\\SOFTWARE\\XFS ({view})", Outcome.Info, "not present");
-                continue;
+                using var xfs = hive.OpenSubKey(root);
+                if (xfs is null)
+                {
+                    report.Add(S, $"HKLM\\{root} ({view})", Outcome.Info, "not present");
+                    continue;
+                }
+
+                found += ReadServices(report, xfs, $"{root} ({view})");
             }
 
-            using var logical = xfs.OpenSubKey("LOGICAL_SERVICES");
-            foreach (var name in logical?.GetSubKeyNames() ?? [])
+            if (found == 0)
             {
-                using var key = logical!.OpenSubKey(name);
-                var provider = key?.GetValue("provider")?.ToString() ?? "?";
-                var klass = key?.GetValue("class")?.ToString() ?? "?";
-                using var providerKey = xfs.OpenSubKey(@"SERVICE_PROVIDERS\" + provider);
-                var dll = providerKey?.GetValue("dllname")?.ToString() ?? "?";
-                report.Add(S, $"logical service {name} ({view})", Outcome.Info, $"class {klass}, provider {provider}, dll {dll}");
-                found++;
+                // Fallback: look for any LOGICAL_SERVICES key a few levels under SOFTWARE, in case the vendor uses another root.
+                using var software = hive.OpenSubKey("SOFTWARE");
+                foreach (var path in FindKeys(software, "LOGICAL_SERVICES", 3, "SOFTWARE"))
+                {
+                    var parent = path[..path.LastIndexOf('\\')];
+                    if (roots.Contains(parent, StringComparer.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    using var xfs = hive.OpenSubKey(parent);
+                    if (xfs is not null)
+                    {
+                        report.Add(S, $"discovered root HKLM\\{parent} ({view})", Outcome.Info, "found a LOGICAL_SERVICES key; use --xfs-path to pin it");
+                        found += ReadServices(report, xfs, $"{parent} ({view})");
+                    }
+                }
             }
         }
 
-        report.Add(S, "summary", found > 0 ? Outcome.Pass : Outcome.Info, found > 0 ? $"{found} logical services found. Send this report so the Phase 2 adapters can target them." : "no XFS logical services registered. The device adapters in Phase 2 need XFS (or XFS4IoT) services installed on the machine.");
+        report.Add(S, "summary", found > 0 ? Outcome.Pass : Outcome.Info, found > 0 ? $"{found} logical services found. Send this report so the Phase 2 adapters can target them." : "no XFS logical services registered. Try --xfs-path \"HKLM\\SOFTWARE\\<vendor>\\XFS\" with your registry path. The device adapters in Phase 2 need XFS (or XFS4IoT) services installed on the machine.");
+    }
+
+    private static string NormalizeXfsPath(string path)
+    {
+        var p = path.Trim().Trim('"').Replace('/', '\\');
+        foreach (var prefix in new[] { "HKEY_LOCAL_MACHINE\\", "HKLM\\" })
+        {
+            if (p.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                p = p[prefix.Length..];
+            }
+        }
+
+        return p.Trim('\\');
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static IEnumerable<string> FindKeys(Microsoft.Win32.RegistryKey? key, string name, int depth, string path)
+    {
+        if (key is null || depth < 0)
+        {
+            yield break;
+        }
+
+        string[] children;
+        try
+        {
+            children = key.GetSubKeyNames();
+        }
+        catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
+        {
+            yield break;
+        }
+
+        foreach (var child in children)
+        {
+            var childPath = path + "\\" + child;
+            if (string.Equals(child, name, StringComparison.OrdinalIgnoreCase))
+            {
+                yield return childPath;
+                continue;
+            }
+
+            Microsoft.Win32.RegistryKey? sub = null;
+            try
+            {
+                sub = key.OpenSubKey(child);
+            }
+            catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
+            {
+            }
+
+            using (sub)
+            {
+                foreach (var hit in FindKeys(sub, name, depth - 1, childPath))
+                {
+                    yield return hit;
+                }
+            }
+        }
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static int ReadServices(Report report, Microsoft.Win32.RegistryKey xfs, string label)
+    {
+        var count = 0;
+        using var logical = xfs.OpenSubKey("LOGICAL_SERVICES");
+        foreach (var name in logical?.GetSubKeyNames() ?? [])
+        {
+            using var key = logical!.OpenSubKey(name);
+            var provider = key?.GetValue("provider")?.ToString() ?? "?";
+            var klass = key?.GetValue("class")?.ToString() ?? "?";
+            using var providerKey = xfs.OpenSubKey(@"SERVICE_PROVIDERS\" + provider);
+            var dll = providerKey?.GetValue("dllname")?.ToString() ?? "?";
+            report.Add("XFS", $"logical service {name} ({label})", Outcome.Info, $"class {klass}, provider {provider}, dll {dll}");
+            count++;
+        }
+
+        return count;
     }
 
     public static async Task PlatformAsync(Report report, string terminalId)
