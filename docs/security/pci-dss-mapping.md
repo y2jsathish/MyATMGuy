@@ -15,7 +15,7 @@ This maps platform controls to PCI DSS requirements so the assessor starts from 
 | 10.3 Protect audit logs | Chain verification, purge anchor; no update or delete API | `VerifyAsync` tests |
 | 10.4 / 10.5 Review and retain | `atmlog` search tool, rolling retention | `tools/ATM.LogViewer` |
 | 10.6 Time sync | All times UTC via `TimeProvider`; OS time sync is a deployment task | Deployment guide |
-| 11.3 Vulnerability scans | `dotnet list package --vulnerable`, CodeQL weekly | CI |
+| 11.3 Vulnerability scans | `dotnet list package --vulnerable`, CodeQL (`codeql.yml`) | CI |
 | 12.10 Incident response | Error catalogue, error counters, notifications, runbook | `docs/ops/runbook.md` |
 
 Gaps owned by the deployment or Phase 2: disk encryption, OS hardening, network segmentation, PIN translation security, P2PE, penetration test.
