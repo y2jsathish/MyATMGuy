@@ -40,6 +40,13 @@ jobs:
         run: |
           dotnet list ATM.sln package --vulnerable --include-transitive 2>&1 | tee vuln.txt
           if grep -q "has the following vulnerable packages" vuln.txt; then echo "::error::vulnerable packages found"; exit 1; fi
+      - name: Publish field test tool (win-x64, single file)
+        run: dotnet publish tools/ATM.FieldTest/ATM.FieldTest.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o artifacts/fieldtest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atm-fieldtest-win-x64
+          path: |
+            artifacts/fieldtest/atmfieldtest.exe
       - name: Publish Host (win-x64, self-contained)
         run: dotnet publish src/ATM.Host/ATM.Host.csproj -c Release -r win-x64 --self-contained true -o artifacts/host
       - uses: actions/upload-artifact@v4

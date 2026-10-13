@@ -10,3 +10,9 @@ foreach ($rid in $Rids) {
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   }
 }
+foreach ($rid in $Rids) {
+  dotnet publish tools/ATM.FieldTest -c Release -r $rid --self-contained `
+    -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
+    -o "artifacts/fieldtest/$rid"
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
