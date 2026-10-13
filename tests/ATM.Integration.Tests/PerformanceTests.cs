@@ -17,6 +17,10 @@ namespace ATM.Integration.Tests;
 [Trait("Category", "Performance")]
 public class PerformanceTests(ITestOutputHelper output)
 {
+    // Shared CI runners fsync far slower than an ATM PC; the workflow sets ATM_PERF_BUDGET_FACTOR to widen the disk-bound budget.
+    private static double BudgetFactor =>
+        double.TryParse(Environment.GetEnvironmentVariable("ATM_PERF_BUDGET_FACTOR"), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var f) && f >= 1 ? f : 1.0;
+
     private static double Percentile(IEnumerable<double> values, double p)
     {
         var sorted = values.OrderBy(v => v).ToArray();
@@ -88,7 +92,7 @@ public class PerformanceTests(ITestOutputHelper output)
 
         var p95 = Percentile(samples.Skip(20), 0.95); // skip connection warm-up
         output.WriteLine($"Transaction insert p95: {p95:0.00} ms (synchronous=FULL, WAL)");
-        p95.Should().BeLessThan(20.0);
+        p95.Should().BeLessThan(20.0 * BudgetFactor);
     }
 
     [Fact]

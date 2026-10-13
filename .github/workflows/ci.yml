@@ -54,7 +54,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - run: dotnet test tests/ATM.Integration.Tests -c Release --filter Category=Performance --logger "console;verbosity=detailed"
+      - env:
+          ATM_PERF_BUDGET_FACTOR: "2" # shared-runner disks; the 20 ms transaction budget is authoritative on the reference ATM PC
+        run: dotnet test tests/ATM.Integration.Tests -c Release --filter Category=Performance --logger "console;verbosity=detailed"
 
   testapps:
     strategy:
