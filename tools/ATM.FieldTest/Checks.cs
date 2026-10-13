@@ -116,7 +116,15 @@ public static class Checks
                     continue;
                 }
 
+                var before = found;
                 found += ReadServices(report, xfs, $"{root} ({view})");
+                if (found == before)
+                {
+                    report.Add(S, $"HKLM\\{root} ({view})", Outcome.Info, "present but no LOGICAL_SERVICES entries; raw tree follows");
+                }
+
+                var lines = 0;
+                DumpKey(report, xfs, $"{root} ({view})", 0, ref lines);
             }
 
             if (found == 0)
@@ -200,6 +208,43 @@ public static class Checks
                 {
                     yield return hit;
                 }
+            }
+        }
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static void DumpKey(Report report, Microsoft.Win32.RegistryKey key, string label, int depth, ref int lines)
+    {
+        const int maxLines = 300;
+        const int maxDepth = 4;
+        if (lines >= maxLines)
+        {
+            return;
+        }
+
+        foreach (var valueName in key.GetValueNames())
+        {
+            if (lines++ >= maxLines)
+            {
+                report.Add("XFS", "raw tree", Outcome.Info, "truncated at 300 lines");
+                return;
+            }
+
+            var text = key.GetValue(valueName)?.ToString() ?? "";
+            report.Add("XFS", $"raw {label}", Outcome.Info, $"{key.Name.Replace("HKEY_LOCAL_MACHINE\\", "")} : {(valueName.Length == 0 ? "(default)" : valueName)} = {(text.Length > 200 ? text[..200] : text)}");
+        }
+
+        if (depth >= maxDepth)
+        {
+            return;
+        }
+
+        foreach (var name in key.GetSubKeyNames())
+        {
+            using var child = key.OpenSubKey(name);
+            if (child is not null)
+            {
+                DumpKey(report, child, label, depth + 1, ref lines);
             }
         }
     }
