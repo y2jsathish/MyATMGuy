@@ -44,6 +44,10 @@ Docs: `docs/security/threat-model.md`, `docs/security/pci-dss-mapping.md`, `docs
 
 Test apps: Core, Application, Infrastructure, Presentation, Monitoring (`tools/ATM.TestApp.*`), plus `atmlog` (log viewer) and `atmcfg` (config tool).
 
+## Phase 2 (started)
+
+P2-1 is in: `CashWithdrawalFlow` over the device ports and a host port, with a simulated host. Plan and status: `docs/phase2/phase2-plan.md`. Field tool for real machines: `docs/ops/field-test.md`.
+
 ## Configuration and secrets (Sprint 3)
 
 Layers, lowest to highest precedence: `appsettings.json`, `appsettings.{ATM_ENVIRONMENT}.json`, `terminal.json`, `ATM_` environment variables (use `__` for nesting, e.g. `ATM_Terminal__TerminalId`). Environments: Dev, Sit, Uat, Pilot, Prod (default Dev). Prod forbids debug features and plaintext secrets, and requires `config.manifest`.

@@ -18,3 +18,4 @@
 | 014 | Polly v8 resilience pipelines with an outbox for monitoring traffic |
 | 015 | Shared `PlatformBootstrap` so the Host and integration tests start the same graph |
 | 016 | Transitive package versions pinned centrally (`CentralPackageTransitivePinningEnabled`); vulnerability scan is a CI gate |
+| 017 | Authorization host sits behind `IHostGateway` in Application; the withdrawal flow stores the transaction Pending before asking the host and reverses on any failure after a possible approval |

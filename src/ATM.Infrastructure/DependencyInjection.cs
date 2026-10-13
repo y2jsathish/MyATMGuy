@@ -152,6 +152,10 @@ public static class DependencyInjection
         configure?.Invoke(options);
         services.TryAddSingleton(options);
 
+        services.TryAddSingleton<SimulatedHostOptions>();
+        services.TryAddSingleton<SimulatedHostGateway>();
+        services.TryAddSingleton<ATM.Application.Transactions.IHostGateway>(sp => sp.GetRequiredService<SimulatedHostGateway>());
+
         services.TryAddSingleton<SimulatedCardReader>();
         services.TryAddSingleton<SimulatedPinPad>();
         services.TryAddSingleton<SimulatedCashDispenser>();

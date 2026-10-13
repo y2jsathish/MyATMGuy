@@ -25,6 +25,9 @@ public static class ErrorCatalogue
     public static readonly ErrorCode DeviceFault = new("ATM-4001", ErrorSeverity.High, "A device reported a fault.");
     public static readonly ErrorCode DeviceOffline = new("ATM-4002", ErrorSeverity.High, "A device is offline.");
     public static readonly ErrorCode TransactionStateInvalid = new("ATM-5001", ErrorSeverity.Medium, "The transaction is not in a valid state for this operation.");
+    public static readonly ErrorCode HostUnavailable = new("ATM-5002", ErrorSeverity.High, "The authorization host did not answer in time or could not be reached.");
+    public static readonly ErrorCode DispenseFailed = new("ATM-5003", ErrorSeverity.High, "Cash was authorized but could not be dispensed; a reversal was requested.");
+    public static readonly ErrorCode ReversalFailed = new("ATM-5004", ErrorSeverity.Critical, "A reversal could not be delivered to the host and needs manual reconciliation.");
 
     public static IReadOnlyList<ErrorCode> All { get; } =
     [
@@ -40,6 +43,9 @@ public static class ErrorCatalogue
         DeviceFault,
         DeviceOffline,
         TransactionStateInvalid,
+        HostUnavailable,
+        DispenseFailed,
+        ReversalFailed,
     ];
 
     public static ErrorCode? Find(string code) =>

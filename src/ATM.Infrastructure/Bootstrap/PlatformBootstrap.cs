@@ -45,6 +45,7 @@ public static class PlatformBootstrap
                 configureLogging: o => configuration.GetSection(Logging.LoggingOptions.SectionName).Bind(o),
                 configureAudit: a => a.KeyDirectory = Path.Combine(start.BasePath, "keys"))
             .AddAtmPersistence(o => configuration.GetSection(DatabaseOptions.SectionName).Bind(o))
-            .AddModules(configuration, new PlatformServicesModule());
+            .AddModules(configuration, new PlatformServicesModule())
+            .AddTransient<ATM.Application.Transactions.CashWithdrawalFlow>();
     }
 }

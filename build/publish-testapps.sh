@@ -10,3 +10,10 @@ for rid in "${rids[@]}"; do
       -o "artifacts/testapps/$rid"
   done
 done
+
+# Field test tool for real machines (see docs/ops/field-test.md)
+for rid in "${rids[@]}"; do
+  dotnet publish tools/ATM.FieldTest -c Release -r "$rid" --self-contained \
+    -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true \
+    -o "artifacts/fieldtest/$rid"
+done
