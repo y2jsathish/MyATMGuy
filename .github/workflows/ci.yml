@@ -6,6 +6,19 @@ on:
   pull_request:
 
 jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-windows:
     runs-on: windows-latest
     steps:
@@ -14,11 +27,36 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - run: dotnet build ATM.sln -c Release
-      - run: dotnet test ATM.CrossPlatform.slnf -c Release --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+      - run: dotnet test ATM.CrossPlatform.slnf -c Release --no-build --filter "Category!=Performance" --collect:"XPlat Code Coverage" --results-directory TestResults
+      - name: Coverage gate (line 80, branch 70)
+        shell: bash
+        run: python3 scripts/coverage-gate.py TestResults --line 80 --branch 70
       - uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: TestResults/**/coverage.cobertura.xml
+      - name: Vulnerable packages
+        shell: bash
+        run: |
+          dotnet list ATM.sln package --vulnerable --include-transitive 2>&1 | tee vuln.txt
+          if grep -q "has the following vulnerable packages" vuln.txt; then echo "::error::vulnerable packages found"; exit 1; fi
+      - name: Publish Host (win-x64, self-contained)
+        run: dotnet publish src/ATM.Host/ATM.Host.csproj -c Release -r win-x64 --self-contained true -o artifacts/host
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atm-host-win-x64
+          path: artifacts/host
+
+  performance:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - env:
+          ATM_PERF_BUDGET_FACTOR: "2" # shared-runner disks; the 20 ms transaction budget is authoritative on the reference ATM PC
+        run: dotnet test tests/ATM.Integration.Tests -c Release --filter Category=Performance --logger "console;verbosity=detailed"
 
   testapps:
     strategy:

@@ -6,6 +6,7 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <TextBlock Grid.Row="0" Text="Device self-test" FontSize="32" FontWeight="SemiBold"
@@ -31,5 +32,35 @@
         <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="*" />
       </DataGrid.Columns>
     </DataGrid>
+
+    <StackPanel Grid.Row="3" Margin="0,24,0,0">
+      <StackPanel Orientation="Horizontal" Visibility="{Binding CanUseSupervisorMode, Converter={StaticResource Converter.BoolToVisibility}}">
+        <PasswordBox x:Name="PasscodeBox" Width="200" MinHeight="48" FontSize="18" Margin="0,0,16,0" />
+        <Button Content="Supervisor login" Click="OnSupervisorLoginClick" Style="{StaticResource Style.Button}" />
+        <Button Content="Exit supervisor" Command="{Binding ExitSupervisorCommand}" Style="{StaticResource Style.Button}" Margin="16,0,0,0" />
+        <TextBlock Text="{Binding SupervisorMessage}" VerticalAlignment="Center" Margin="16,0,0,0" FontSize="16"
+                   Foreground="{StaticResource Brush.TextMuted}" />
+      </StackPanel>
+
+      <StackPanel Visibility="{Binding IsSupervisor, Converter={StaticResource Converter.BoolToVisibility}}" Margin="0,16,0,0">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="System health:" FontSize="18" Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding HealthOverall}" FontSize="18" FontWeight="SemiBold" Margin="8,0,24,0"
+                     Foreground="{StaticResource Brush.Text}" VerticalAlignment="Center" />
+          <Button Content="Refresh" Command="{Binding RefreshHealthCommand}" Style="{StaticResource Style.Button}" />
+        </StackPanel>
+        <DataGrid ItemsSource="{Binding Health}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                  CanUserAddRows="False" MaxHeight="220" Margin="0,12,0,0" FontSize="16"
+                  Background="{StaticResource Brush.Panel}" Foreground="{StaticResource Brush.Text}"
+                  RowBackground="{StaticResource Brush.Panel}" BorderBrush="{StaticResource Brush.Border}">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Check" Binding="{Binding Name}" Width="160" />
+            <DataGridTextColumn Header="State" Binding="{Binding State}" Width="120" />
+            <DataGridTextColumn Header="Last run" Binding="{Binding LastRun}" Width="110" />
+            <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*" />
+          </DataGrid.Columns>
+        </DataGrid>
+      </StackPanel>
+    </StackPanel>
   </Grid>
 </UserControl>

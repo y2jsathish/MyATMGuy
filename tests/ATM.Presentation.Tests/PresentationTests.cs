@@ -1,6 +1,9 @@
 using System.ComponentModel;
 using ATM.Application;
 using ATM.Application.Devices;
+using ATM.Application.Health;
+using ATM.Application.Notifications;
+using ATM.Application.Supervisor;
 using ATM.Core.Devices;
 using ATM.Infrastructure;
 using ATM.Presentation.Navigation;
@@ -132,5 +135,100 @@ public class MaintenanceViewModelTests
 
         home.Heading.Should().Be("Welcome");
         home.Prompt.Should().Contain("card");
+    }
+}
+
+public class SupervisorHealthViewModelTests
+{
+    private sealed class OneCheck(HealthCheckResult result) : IHealthCheck
+    {
+        public string Name => "Disk";
+
+        public Task<HealthCheckResult> CheckAsync(CancellationToken cancellationToken = default) => Task.FromResult(result);
+    }
+
+    private static (MaintenanceViewModel ViewModel, List<(string Action, string Outcome)> Audited) Create(string passcodeHash, HealthCheckResult? check = null)
+    {
+        var audited = new List<(string, string)>();
+        var audit = Substitute.For<ATM.Application.Audit.IAuditService>();
+        audit.RecordAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<ATM.Core.Entities.AuditCategory>(), Arg.Any<ATM.Core.ValueObjects.CorrelationId?>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                audited.Add((call.ArgAt<string>(1), call.ArgAt<string>(3)));
+                return Task.FromResult<ATM.Core.Entities.AuditEntry>(null!);
+            });
+        var bus = new ATM.Application.Events.InProcessEventBus(new ATM.Application.Events.InMemoryDeadLetterStore(), new ATM.Application.Errors.ErrorCounters(), TimeProvider.System);
+        var monitor = new HealthMonitor([new OneCheck(check ?? HealthCheckResult.Healthy("120 GB free"))], bus, TimeProvider.System);
+        var session = new SupervisorSession(new SupervisorOptions { PasscodeHash = passcodeHash }, TimeProvider.System);
+        return (new MaintenanceViewModel(Substitute.For<IDeviceSelfTestService>(), session, monitor, audit), audited);
+    }
+
+    [Fact]
+    public async Task HealthList_IsHiddenAndEmpty_UntilSupervisorLogsIn()
+    {
+        var (vm, _) = Create(PasscodeHasher.Hash("2468"));
+
+        await vm.RefreshHealthCommand.ExecuteAsync(null);
+
+        vm.IsSupervisor.Should().BeFalse();
+        vm.Health.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task CorrectPasscode_ShowsHealth_AndAuditsTheLogin()
+    {
+        var (vm, audited) = Create(PasscodeHasher.Hash("2468"), HealthCheckResult.Degraded("low disk"));
+        vm.Passcode = "2468";
+
+        await vm.EnterSupervisorCommand.ExecuteAsync(null);
+
+        vm.IsSupervisor.Should().BeTrue();
+        vm.Passcode.Should().BeEmpty("the passcode must not linger");
+        vm.HealthOverall.Should().Be("Degraded");
+        vm.Health.Should().ContainSingle().Which.Should().Match<HealthItem>(h => h.Name == "Disk" && h.Message == "low disk");
+        audited.Should().Contain(("SupervisorLogin", "Granted"));
+        vm.Dispose();
+    }
+
+    [Fact]
+    public async Task WrongPasscode_IsDenied_AndAudited()
+    {
+        var (vm, audited) = Create(PasscodeHasher.Hash("2468"));
+        vm.Passcode = "0000";
+
+        await vm.EnterSupervisorCommand.ExecuteAsync(null);
+
+        vm.IsSupervisor.Should().BeFalse();
+        vm.SupervisorMessage.Should().Contain("Wrong");
+        audited.Should().Contain(("SupervisorLogin", "Denied"));
+    }
+
+    [Fact]
+    public async Task Exit_ClearsHealth()
+    {
+        var (vm, _) = Create(PasscodeHasher.Hash("2468"));
+        vm.Passcode = "2468";
+        await vm.EnterSupervisorCommand.ExecuteAsync(null);
+
+        vm.ExitSupervisorCommand.Execute(null);
+
+        vm.IsSupervisor.Should().BeFalse();
+        vm.Health.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void WithoutSupervisorService_ModeIsUnavailable() =>
+        new MaintenanceViewModel(Substitute.For<IDeviceSelfTestService>()).CanUseSupervisorMode.Should().BeFalse();
+
+    [Fact]
+    public void Banner_ShowsNewestNotification()
+    {
+        SynchronizationContext.SetSynchronizationContext(null); // the test runner's context would defer the update
+        var channel = new UiBannerChannel();
+        var shell = new ShellViewModel(Substitute.For<INavigationService>(), channel);
+
+        channel.SendAsync(new Notification(ATM.Core.Errors.ErrorSeverity.High, "Health: Disk is Unhealthy", "2 MB free", DateTimeOffset.UtcNow));
+
+        shell.Banner.Should().Be("Health: Disk is Unhealthy: 2 MB free");
     }
 }

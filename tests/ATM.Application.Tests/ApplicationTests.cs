@@ -94,6 +94,8 @@ public class DependencyInjectionTests
     public void AddApplication_RegistersServicesAndClock()
     {
         using var provider = new ServiceCollection()
+            .AddSingleton(NSubstitute.Substitute.For<ATM.Application.Audit.IAuditStore>())
+            .AddSingleton(new ATM.Application.Audit.AuditSigningKey(new byte[32]))
             .AddApplication()
             .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 

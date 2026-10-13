@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ATM.Integration.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ATM.Monitoring.Api\ATM.Monitoring.Api.csproj" />
+    <ProjectReference Include="..\..\src\ATM.Presentation\ATM.Presentation.csproj" />
+    <ProjectReference Include="..\..\src\ATM.Infrastructure\ATM.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\ATM.Application\ATM.Application.csproj" />
+    <ProjectReference Include="..\..\src\ATM.Core\ATM.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+</Project>

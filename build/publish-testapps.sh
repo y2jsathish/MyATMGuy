@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 rids=("$@"); [ ${#rids[@]} -eq 0 ] && rids=(win-x64 linux-x64)
 for rid in "${rids[@]}"; do
-  for layer in Core Application Infrastructure Presentation; do
+  for layer in Core Application Infrastructure Presentation Monitoring; do
     dotnet publish "tools/ATM.TestApp.$layer" -c Release -r "$rid" --self-contained \
       -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true \
       -o "artifacts/testapps/$rid"
