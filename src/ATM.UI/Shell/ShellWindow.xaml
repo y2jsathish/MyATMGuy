@@ -11,6 +11,8 @@
                    Foreground="{StaticResource Brush.Text}" Margin="0,0,32,0" />
         <Button Content="Home" Command="{Binding ShowHomeCommand}"
                 Style="{StaticResource Style.Button}" Margin="0,0,12,0" />
+        <Button Content="Services" Command="{Binding ShowServicesCommand}"
+                Style="{StaticResource Style.Button}" Margin="0,0,12,0" />
         <Button Content="Maintenance" Command="{Binding ShowMaintenanceCommand}"
                 Style="{StaticResource Style.Button}" />
       </StackPanel>

@@ -84,7 +84,7 @@ public partial class App
         var heartbeat = new DispatcherTimer(TimeSpan.FromSeconds(5), DispatcherPriority.Normal, (_, _) => watchdog.Beat(), Dispatcher);
         heartbeat.Start();
 
-        _host.Services.GetRequiredService<INavigationService>().NavigateTo<HomeViewModel>();
+        _host.Services.GetRequiredService<INavigationService>().NavigateTo<CustomerServiceViewModel>();
         _host.Services.GetRequiredService<ShellWindow>().Show();
     }
 

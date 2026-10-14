@@ -46,7 +46,7 @@ Test apps: Core, Application, Infrastructure, Presentation, Monitoring (`tools/A
 
 ## Phase 2 (started)
 
-P2-1 is in: `CashWithdrawalFlow` over the device ports and a host port, with a simulated host. P2-2 flows (balance inquiry, mini statement, PIN change) are in too; their customer screens are next. Plan and status: `docs/phase2/phase2-plan.md`. Field tool for real machines: `docs/ops/field-test.md`.
+P2-1 is in: `CashWithdrawalFlow` over the device ports and a host port, with a simulated host. P2-2 flows (balance inquiry, mini statement, PIN change) and their customer screens are in too, and P2-3 keeps undelivered reversals in the database and retries them. Plan and status: `docs/phase2/phase2-plan.md`. Field tool for real machines: `docs/ops/field-test.md`.
 
 ## Configuration and secrets (Sprint 3)
 
