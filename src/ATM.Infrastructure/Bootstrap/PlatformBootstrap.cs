@@ -46,6 +46,10 @@ public static class PlatformBootstrap
                 configureAudit: a => a.KeyDirectory = Path.Combine(start.BasePath, "keys"))
             .AddAtmPersistence(o => configuration.GetSection(DatabaseOptions.SectionName).Bind(o))
             .AddModules(configuration, new PlatformServicesModule())
-            .AddTransient<ATM.Application.Transactions.CashWithdrawalFlow>();
+            .AddTransient<ATM.Application.Transactions.CashWithdrawalFlow>()
+            .AddTransient<ATM.Application.Transactions.CardServiceRunner>()
+            .AddTransient<ATM.Application.Transactions.BalanceInquiryFlow>()
+            .AddTransient<ATM.Application.Transactions.MiniStatementFlow>()
+            .AddTransient<ATM.Application.Transactions.PinChangeFlow>();
     }
 }
