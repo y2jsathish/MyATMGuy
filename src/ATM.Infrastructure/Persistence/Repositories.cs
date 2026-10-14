@@ -115,6 +115,32 @@ internal sealed class AuditRepository(AtmDbContext db) : IAuditRepository
     }
 }
 
+internal sealed class ReversalRepository(AtmDbContext db) : IReversalRepository
+{
+    public async Task AddAsync(ReversalRequest reversal, CancellationToken cancellationToken = default) =>
+        await db.Reversals.AddAsync(reversal, cancellationToken).ConfigureAwait(false);
+
+    public Task<ReversalRequest?> GetAsync(Guid transactionId, CancellationToken cancellationToken = default) =>
+        db.Reversals.FirstOrDefaultAsync(r => r.Id == transactionId, cancellationToken);
+
+    public async Task<IReadOnlyList<ReversalRequest>> DueAsync(DateTimeOffset nowUtc, int take, CancellationToken cancellationToken = default) =>
+        await db.Reversals
+            .Where(r => r.State == ReversalState.Pending && r.NextAttemptUtc <= nowUtc)
+            .OrderBy(r => r.CreatedUtc)
+            .Take(take)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+    public async Task<IReadOnlyList<ReversalRequest>> UnresolvedAsync(CancellationToken cancellationToken = default) =>
+        await db.Reversals
+            .Where(r => r.State != ReversalState.Delivered)
+            .OrderBy(r => r.CreatedUtc)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+}
+
 internal sealed class EfUnitOfWork(AtmDbContext db, SecretProtector protector) : IUnitOfWork
 {
     public ITransactionRepository Transactions { get; } = new TransactionRepository(db);
@@ -126,6 +152,8 @@ internal sealed class EfUnitOfWork(AtmDbContext db, SecretProtector protector) :
     public IConfigRepository Config { get; } = new ConfigRepository(db, protector);
 
     public IAuditRepository Audit { get; } = new AuditRepository(db);
+
+    public IReversalRepository Reversals { get; } = new ReversalRepository(db);
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {

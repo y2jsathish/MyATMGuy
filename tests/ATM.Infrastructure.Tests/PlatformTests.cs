@@ -437,7 +437,7 @@ public sealed class PlatformModuleTests : IDisposable
         await provider.GetRequiredService<DatabaseMaintenance>().InitializeAsync();
 
         await using var db = await provider.GetRequiredService<IDbContextFactory<AtmDbContext>>().CreateDbContextAsync();
-        (await db.Database.GetAppliedMigrationsAsync()).Should().HaveCount(2);
+        (await db.Database.GetAppliedMigrationsAsync()).Should().HaveCount(3);
         (await db.Database.GetPendingMigrationsAsync()).Should().BeEmpty();
     }
 }

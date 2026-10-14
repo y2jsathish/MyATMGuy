@@ -226,6 +226,56 @@ namespace ATM.Infrastructure.Persistence.Migrations
                     b.ToTable("Errors", (string)null);
                 });
 
+            modelBuilder.Entity("ATM.Core.Entities.ReversalRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("CreatedUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("LastAttemptUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("NextAttemptUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("ResolvedUtc")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Terminal")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedUtc");
+
+                    b.HasIndex("State", "NextAttemptUtc");
+
+                    b.ToTable("Reversals", (string)null);
+                });
+
             modelBuilder.Entity("ATM.Core.Entities.Transaction", b =>
                 {
                     b.Property<Guid>("Id")

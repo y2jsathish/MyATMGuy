@@ -45,6 +45,19 @@ public interface IAuditRepository
     Task<Page<AuditEntry>> PageAsync(int pageNumber, int pageSize, CorrelationId? correlationId = null, CancellationToken cancellationToken = default);
 }
 
+public interface IReversalRepository
+{
+    Task AddAsync(ReversalRequest reversal, CancellationToken cancellationToken = default);
+
+    Task<ReversalRequest?> GetAsync(Guid transactionId, CancellationToken cancellationToken = default);
+
+    /// <summary>Pending reversals whose next attempt time has come, oldest first.</summary>
+    Task<IReadOnlyList<ReversalRequest>> DueAsync(DateTimeOffset nowUtc, int take, CancellationToken cancellationToken = default);
+
+    /// <summary>Pending and abandoned reversals, oldest first.</summary>
+    Task<IReadOnlyList<ReversalRequest>> UnresolvedAsync(CancellationToken cancellationToken = default);
+}
+
 public sealed record PurgeResult(int Transactions, int Errors, int AuditEntries);
 
 /// <summary>One unit of work: repositories share a single database transaction that commits atomically.</summary>
@@ -59,6 +72,8 @@ public interface IUnitOfWork : IAsyncDisposable
     IConfigRepository Config { get; }
 
     IAuditRepository Audit { get; }
+
+    IReversalRepository Reversals { get; }
 
     /// <summary>Saves all pending changes in one transaction. Concurrent modification raises a concurrency error.</summary>
     Task<int> CommitAsync(CancellationToken cancellationToken = default);

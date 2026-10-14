@@ -39,6 +39,7 @@ public sealed class CashWithdrawalFlow(
     ICashDispenserPort dispenser,
     IReceiptPrinterPort printer,
     IHostGateway host,
+    ReversalService reversals,
     IUnitOfWorkFactory unitOfWork,
     IAuditService audit,
     IEventBus events,
@@ -106,7 +107,7 @@ public sealed class CashWithdrawalFlow(
                 // The host may have approved and we never heard: reverse to be safe.
                 logger.LogWarning(ex, "Host did not answer for transaction {TransactionId}", tx.Id);
                 errors.Record(ErrorCatalogue.HostUnavailable);
-                await ReverseAsync(tx.Id, amount, cancellationToken).ConfigureAwait(false);
+                await reversals.SubmitAsync(tx.Id, tx.Terminal, amount, cancellationToken).ConfigureAwait(false);
                 await FinishAsync(tx.Id, null, "Host unavailable", cancellationToken).ConfigureAwait(false);
                 return new WithdrawalOutcome(WithdrawalResult.HostUnavailable, "We could not reach your bank. No money was taken.", tx.Id, 0m, false, null);
             }
@@ -130,7 +131,7 @@ public sealed class CashWithdrawalFlow(
             if (!cash.Success || cash.Dispensed < amount)
             {
                 errors.Record(ErrorCatalogue.DispenseFailed);
-                await ReverseAsync(tx.Id, amount - cash.Dispensed, cancellationToken).ConfigureAwait(false);
+                await reversals.SubmitAsync(tx.Id, tx.Terminal, amount - cash.Dispensed, cancellationToken).ConfigureAwait(false);
                 await FinishAsync(tx.Id, null, $"Dispense failed after approval: {cash.Error ?? "short dispense"}", cancellationToken).ConfigureAwait(false);
                 return new WithdrawalOutcome(WithdrawalResult.DispenseFailed, "We could not give you the cash. Your account will not be charged for it.", tx.Id, cash.Dispensed, false, approval.ResponseCode);
             }
@@ -178,27 +179,6 @@ public sealed class CashWithdrawalFlow(
 
         await audit.RecordAsync("customer", "Withdrawal", $"tx {id}", failure ?? $"completed {dispensed?.ToString("0.00", CultureInfo.InvariantCulture)}", AuditCategory.Operator, cancellationToken: cancellationToken).ConfigureAwait(false);
         await events.PublishAsync(new TransactionFinished(id, failure is null ? TransactionStatus.Completed : TransactionStatus.Failed), cancellationToken).ConfigureAwait(false);
-    }
-
-    private async Task ReverseAsync(Guid id, decimal amount, CancellationToken cancellationToken)
-    {
-        if (amount <= 0)
-        {
-            return;
-        }
-
-        try
-        {
-            await host.ReverseAsync(id, amount, cancellationToken).ConfigureAwait(false);
-            await audit.RecordAsync("system", "ReversalSent", $"tx {id}", amount.ToString("0.00", CultureInfo.InvariantCulture), AuditCategory.System, cancellationToken: cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            // Needs manual reconciliation: the customer may have been debited without cash.
-            logger.LogCritical(ex, "Reversal for transaction {TransactionId} failed", id);
-            errors.Record(ErrorCatalogue.ReversalFailed);
-            await audit.RecordAsync("system", "ReversalFailed", $"tx {id}", amount.ToString("0.00", CultureInfo.InvariantCulture), AuditCategory.Security, cancellationToken: cancellationToken).ConfigureAwait(false);
-        }
     }
 
     private async Task<bool> PrintReceiptAsync(Transaction tx, decimal dispensed, CancellationToken cancellationToken)
