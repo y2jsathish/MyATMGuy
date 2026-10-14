@@ -60,6 +60,20 @@
             <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="*" />
           </DataGrid.Columns>
         </DataGrid>
+        <TextBlock Text="Reversals waiting for the host" FontSize="18" Margin="0,16,0,0" Foreground="{StaticResource Brush.TextMuted}" />
+        <DataGrid ItemsSource="{Binding Reversals}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                  CanUserAddRows="False" MaxHeight="180" Margin="0,8,0,0" FontSize="16"
+                  Background="{StaticResource Brush.Panel}" Foreground="{StaticResource Brush.Text}"
+                  RowBackground="{StaticResource Brush.Panel}" BorderBrush="{StaticResource Brush.Border}">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Transaction" Binding="{Binding Transaction}" Width="300" />
+            <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="100" />
+            <DataGridTextColumn Header="State" Binding="{Binding State}" Width="110" />
+            <DataGridTextColumn Header="Tries" Binding="{Binding Attempts}" Width="70" />
+            <DataGridTextColumn Header="Created" Binding="{Binding Created}" Width="150" />
+            <DataGridTextColumn Header="Last error" Binding="{Binding LastError}" Width="*" />
+          </DataGrid.Columns>
+        </DataGrid>
       </StackPanel>
     </StackPanel>
   </Grid>

@@ -48,11 +48,13 @@ public static class PlatformBootstrap
             .AddModules(configuration, new PlatformServicesModule())
             .AddSingleton<ATM.Application.Transactions.ReversalOptions>()
             .AddSingleton<ATM.Application.Transactions.ReversalService>()
+            .AddSingleton<ATM.Application.Transactions.IReversalReport>(sp => sp.GetRequiredService<ATM.Application.Transactions.ReversalService>())
             .AddSingleton<ATM.Application.Jobs.IScheduledJob, ATM.Infrastructure.Jobs.ReversalRetryJob>()
             .AddTransient<ATM.Application.Transactions.CashWithdrawalFlow>()
             .AddTransient<ATM.Application.Transactions.CardServiceRunner>()
             .AddTransient<ATM.Application.Transactions.BalanceInquiryFlow>()
             .AddTransient<ATM.Application.Transactions.MiniStatementFlow>()
-            .AddTransient<ATM.Application.Transactions.PinChangeFlow>();
+            .AddTransient<ATM.Application.Transactions.PinChangeFlow>()
+            .AddTransient<ATM.Application.Transactions.ICustomerSessionService, ATM.Application.Transactions.CustomerSessionService>();
     }
 }

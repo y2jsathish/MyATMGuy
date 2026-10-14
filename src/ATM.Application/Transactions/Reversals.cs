@@ -33,6 +33,13 @@ public sealed class ReversalOptions
 /// Gets reversals to the host. A reversal is stored first and then sent at once; if the host cannot be reached it is kept and the retry job
 /// sends it again with growing waits until the host accepts it. The host must treat a repeated reversal for the same transaction id as already applied.
 /// </summary>
+/// <summary>Read side of the reversal queue, for the supervisor screen.</summary>
+public interface IReversalReport
+{
+    /// <summary>Reversals that are still waiting or were given up on: the list a person reconciles with the host.</summary>
+    Task<IReadOnlyList<ReversalRequest>> UnresolvedAsync(CancellationToken cancellationToken = default);
+}
+
 public sealed class ReversalService(
     IHostGateway host,
     IUnitOfWorkFactory unitOfWork,
@@ -40,7 +47,7 @@ public sealed class ReversalService(
     IErrorCounters errors,
     ReversalOptions options,
     TimeProvider clock,
-    ILogger<ReversalService> logger)
+    ILogger<ReversalService> logger) : IReversalReport
 {
     public async Task SubmitAsync(Guid transactionId, TerminalId terminal, decimal amount, CancellationToken cancellationToken = default)
     {
@@ -88,7 +95,6 @@ public sealed class ReversalService(
         return delivered;
     }
 
-    /// <summary>Reversals that are still waiting or were given up on: the list a person reconciles with the host.</summary>
     public async Task<IReadOnlyList<ReversalRequest>> UnresolvedAsync(CancellationToken cancellationToken = default)
     {
         await using var uow = unitOfWork.Create();

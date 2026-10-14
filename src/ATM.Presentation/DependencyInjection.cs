@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<ShellViewModel>();
         services.AddTransient<HomeViewModel>();
+        services.AddTransient<CustomerServiceViewModel>();
         services.AddTransient<MaintenanceViewModel>();
         return services;
     }

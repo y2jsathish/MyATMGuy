@@ -4,6 +4,7 @@ using ATM.Application.Devices;
 using ATM.Application.Health;
 using ATM.Application.Notifications;
 using ATM.Application.Supervisor;
+using ATM.Application.Transactions;
 using ATM.Core.Entities;
 using ATM.Presentation.Navigation;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -56,6 +57,9 @@ public sealed partial class ShellViewModel : ViewModelBase
     private void ShowHome() => _navigation.NavigateTo<HomeViewModel>();
 
     [RelayCommand]
+    private void ShowServices() => _navigation.NavigateTo<CustomerServiceViewModel>();
+
+    [RelayCommand]
     private void ShowMaintenance() => _navigation.NavigateTo<MaintenanceViewModel>();
 }
 
@@ -66,15 +70,171 @@ public sealed class HomeViewModel : ViewModelBase
     public string Prompt => "Insert your card to begin";
 }
 
+public enum CustomerStage
+{
+    Choose,
+    Working,
+    Result,
+}
+
+/// <summary>
+/// The customer screen: pick a service, follow the device prompts while it runs, read the result. The result goes away by itself after a
+/// short time so the next person never sees the last customer's balance.
+/// </summary>
+public sealed partial class CustomerServiceViewModel(ICustomerSessionService? sessions = null, TimeSpan? resultTimeout = null) : ViewModelBase, IDisposable
+{
+    public static readonly TimeSpan DefaultResultTimeout = TimeSpan.FromSeconds(20);
+
+    private CancellationTokenSource? _run;
+    private CancellationTokenSource? _returnTimer;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsChoosing), nameof(IsWorking), nameof(IsResult))]
+    private CustomerStage _stage = CustomerStage.Choose;
+
+    [ObservableProperty]
+    private string _prompt = "Choose a service";
+
+    [ObservableProperty]
+    private string _resultTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _resultMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _isSuccess;
+
+    public bool IsAvailable => sessions is not null;
+
+    public bool IsChoosing => Stage == CustomerStage.Choose;
+
+    public bool IsWorking => Stage == CustomerStage.Working;
+
+    public bool IsResult => Stage == CustomerStage.Result;
+
+    public IReadOnlyList<decimal> QuickAmounts => sessions?.QuickAmounts ?? [];
+
+    public ObservableCollection<string> ResultLines { get; } = [];
+
+    [RelayCommand]
+    private Task WithdrawAsync(decimal amount) => RunAsync("Insert your card, then enter your PIN", ct => sessions!.WithdrawAsync(amount, ct));
+
+    [RelayCommand]
+    private Task BalanceAsync() => RunAsync("Insert your card, then enter your PIN", ct => sessions!.BalanceAsync(ct));
+
+    [RelayCommand]
+    private Task MiniStatementAsync() => RunAsync("Insert your card, then enter your PIN", ct => sessions!.MiniStatementAsync(ct));
+
+    [RelayCommand]
+    private Task ChangePinAsync() => RunAsync("Insert your card, enter your current PIN, then the new PIN twice", ct => sessions!.ChangePinAsync(ct));
+
+    /// <summary>Stops a running service. The flow returns the card on its way out.</summary>
+    [RelayCommand]
+    private void Cancel() => _run?.Cancel();
+
+    /// <summary>Leaves the result screen for the service menu.</summary>
+    [RelayCommand]
+    private void Done() => ReturnToMenu();
+
+    private async Task RunAsync(string prompt, Func<CancellationToken, Task<CustomerSessionResult>> service)
+    {
+        if (sessions is null || Stage == CustomerStage.Working)
+        {
+            return;
+        }
+
+        StopReturnTimer();
+        _run = new CancellationTokenSource();
+        Prompt = prompt;
+        Stage = CustomerStage.Working;
+        CustomerSessionResult result;
+        try
+        {
+            result = await service(_run.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            ReturnToMenu();
+            return;
+        }
+        catch (Exception)
+        {
+            result = new CustomerSessionResult(false, "Transaction not completed", "This ATM cannot complete your request.", []);
+        }
+        finally
+        {
+            _run.Dispose();
+            _run = null;
+        }
+
+        ResultTitle = result.Title;
+        ResultMessage = result.Message;
+        IsSuccess = result.Succeeded;
+        ResultLines.Clear();
+        foreach (var line in result.Lines)
+        {
+            ResultLines.Add(line);
+        }
+
+        Stage = CustomerStage.Result;
+        StartReturnTimer();
+    }
+
+    private void StartReturnTimer()
+    {
+        _returnTimer = new CancellationTokenSource();
+        _ = ReturnAfterAsync(resultTimeout ?? DefaultResultTimeout, _returnTimer.Token);
+    }
+
+    private async Task ReturnAfterAsync(TimeSpan delay, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(delay, cancellationToken);
+            ReturnToMenu();
+        }
+        catch (OperationCanceledException)
+        {
+            // the customer pressed Done, or started another service
+        }
+    }
+
+    private void ReturnToMenu()
+    {
+        StopReturnTimer();
+        ResultLines.Clear();
+        ResultTitle = string.Empty;
+        ResultMessage = string.Empty;
+        Prompt = "Choose a service";
+        Stage = CustomerStage.Choose;
+    }
+
+    private void StopReturnTimer()
+    {
+        _returnTimer?.Cancel();
+        _returnTimer?.Dispose();
+        _returnTimer = null;
+    }
+
+    public void Dispose()
+    {
+        _run?.Cancel();
+        StopReturnTimer();
+    }
+}
+
 public sealed record DeviceHealthItem(string Name, string Status, string Detail);
 
 public sealed record HealthItem(string Name, string State, string Message, string LastRun);
+
+public sealed record ReversalItem(string Transaction, string Amount, string State, int Attempts, string Created, string LastError);
 
 public sealed partial class MaintenanceViewModel(
     IDeviceSelfTestService selfTest,
     ISupervisorSession? supervisor = null,
     HealthMonitor? health = null,
-    IAuditService? audit = null) : ViewModelBase, IDisposable
+    IAuditService? audit = null,
+    IReversalReport? reversalReport = null) : ViewModelBase, IDisposable
 {
     public static readonly TimeSpan HealthRefreshInterval = TimeSpan.FromSeconds(30);
 
@@ -103,6 +263,9 @@ public sealed partial class MaintenanceViewModel(
     public ObservableCollection<DeviceHealthItem> Devices { get; } = [];
 
     public ObservableCollection<HealthItem> Health { get; } = [];
+
+    /// <summary>Reversals the host has not accepted yet or that were given up on; shown to supervisors for manual reconciliation.</summary>
+    public ObservableCollection<ReversalItem> Reversals { get; } = [];
 
     [RelayCommand]
     private async Task RunSelfTestAsync(CancellationToken cancellationToken)
@@ -164,6 +327,7 @@ public sealed partial class MaintenanceViewModel(
         supervisor?.Exit();
         IsSupervisor = false;
         Health.Clear();
+        Reversals.Clear();
         HealthOverall = "Not run";
     }
 
@@ -183,6 +347,28 @@ public sealed partial class MaintenanceViewModel(
         }
 
         HealthOverall = report.Overall.ToString();
+        await RefreshReversalsAsync();
+    }
+
+    private async Task RefreshReversalsAsync()
+    {
+        if (reversalReport is null)
+        {
+            return;
+        }
+
+        var unresolved = await reversalReport.UnresolvedAsync();
+        Reversals.Clear();
+        foreach (var r in unresolved)
+        {
+            Reversals.Add(new ReversalItem(
+                r.Id.ToString("D", System.Globalization.CultureInfo.InvariantCulture),
+                r.Amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                r.State.ToString(),
+                r.Attempts,
+                r.CreatedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture),
+                r.LastError ?? string.Empty));
+        }
     }
 
     /// <summary>Refreshes the health list every 30 seconds while supervisor mode is active. Runs on the caller's context, so the UI thread updates the list.</summary>
