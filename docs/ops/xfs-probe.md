@@ -8,18 +8,20 @@ On the DN 200V the XFS manager, the service providers and their registry keys ar
 
 ## Before you run it
 
+
+(`/reg:32` already selects the 32-bit view, which is `WOW6432Node` on disk, so the key path must not repeat `WOW6432Node`.)
 1. Stop Kalignite and any Diebold device services (`DbdDevService`, `Diebold.Harvester.Service`). Only one program can own a device at a time.
 2. A logical service must be registered. On the DN 200V none are today (the KAL XFS trace shows `LOGICAL_SERVICES\<name>` not found). To register the DIP card reader, an administrator runs the two commands below. **This writes to the registry; review before running.** Undo with the delete command.
 
 ```
-reg add "HKLM\SOFTWARE\WOW6432Node\XFS\LOGICAL_SERVICES\ATM_IDC" /v class /t REG_SZ /d IDC /reg:32
-reg add "HKLM\SOFTWARE\WOW6432Node\XFS\LOGICAL_SERVICES\ATM_IDC" /v provider /t REG_SZ /d DN_DIPCardRdr /reg:32
+reg add "HKLM\SOFTWARE\XFS\LOGICAL_SERVICES\ATM_IDC" /v class /t REG_SZ /d IDC /reg:32
+reg add "HKLM\SOFTWARE\XFS\LOGICAL_SERVICES\ATM_IDC" /v provider /t REG_SZ /d DN_DIPCardRdr /reg:32
 ```
 
 Undo:
 
 ```
-reg delete "HKLM\SOFTWARE\WOW6432Node\XFS\LOGICAL_SERVICES\ATM_IDC" /f /reg:32
+reg delete "HKLM\SOFTWARE\XFS\LOGICAL_SERVICES\ATM_IDC" /f /reg:32
 ```
 
 ## Run
