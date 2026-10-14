@@ -136,6 +136,19 @@ public static class Checks
             }
         }
 
+        foreach (var dll in new[] { @"C:\Windows\SysWOW64\msxfs.dll", @"C:\Windows\System32\msxfs.dll", @"C:\Windows\SysWOW64\xfs_conf.dll", @"C:\Windows\SysWOW64\xfs_supp.dll" })
+        {
+            if (File.Exists(dll))
+            {
+                var info = FileVersionInfo.GetVersionInfo(dll);
+                report.Add(S, "xfs library", Outcome.Info, $"{dll} version {info.FileVersion}, company {info.CompanyName}");
+            }
+            else
+            {
+                report.Add(S, "xfs library", Outcome.Info, $"{dll} not present");
+            }
+        }
+
         var hints = new[] { "kal", "probase", "xfs", "agilis", "diebold", "dbd", "atm", "cash", "cardrdr" };
         foreach (var process in Process.GetProcesses().OrderBy(p => p.ProcessName, StringComparer.OrdinalIgnoreCase))
         {
