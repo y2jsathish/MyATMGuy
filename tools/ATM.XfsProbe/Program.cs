@@ -28,26 +28,37 @@ if (Environment.Is64BitProcess)
     return 1;
 }
 
-var ranges = new[]
+// XFS versions are WORDs with the major in the low byte (3.00 = 0x0003, 3.10 = 0x0A03). The SDK header packs the
+// range as one of two word orders, and the first run showed the KAL manager rejecting the order tried first (-2),
+// so every range is tried in both orders and the raw result is printed.
+var versions = new (ushort Value, string Label)[]
 {
-    (Low: (ushort)0x0003, High: (ushort)0x0A03, Label: "3.00-3.10"),
-    (Low: (ushort)0x0002, High: (ushort)0x0003, Label: "2.00-3.00"),
-    (Low: (ushort)0x0003, High: (ushort)0x1403, Label: "3.00-3.20"),
+    (0x0002, "2.00"), (0x0003, "3.00"), (0x0103, "3.01"), (0x0A03, "3.10"), (0x1403, "3.20"), (0x1E03, "3.30"),
 };
+var candidates = new List<(uint Packed, string Label)>();
+foreach (var (lo, loLabel) in versions)
+{
+    foreach (var (hi, hiLabel) in versions)
+    {
+        if (hi < lo) continue;
+        candidates.Add((Xfs.VersionRange(lo, hi), $"{loLabel}-{hiLabel} (low word low)"));
+        if (hi != lo) candidates.Add((Xfs.VersionRange(hi, lo), $"{loLabel}-{hiLabel} (low word high)"));
+    }
+}
 
 try
 {
     var started = false;
     uint usedRange = 0;
-    foreach (var r in ranges)
+    foreach (var (packed, label) in candidates)
     {
         var version = default(Xfs.WfsVersion);
-        var code = Xfs.WFSStartUp(Xfs.VersionRange(r.Low, r.High), ref version);
-        Console.WriteLine($"WFSStartUp {r.Label}: result {code}; manager version 0x{version.Version:X4}, '{version.Description}', '{version.SystemStatus}'");
+        var code = Xfs.WFSStartUp(packed, ref version);
+        Console.WriteLine($"WFSStartUp {label} 0x{packed:X8}: result {code}; manager version 0x{version.Version:X4} (low 0x{version.LowVersion:X4}, high 0x{version.HighVersion:X4}), '{version.Description}', '{version.SystemStatus}'");
         if (code == Xfs.Success)
         {
             started = true;
-            usedRange = Xfs.VersionRange(r.Low, r.High);
+            usedRange = packed;
             break;
         }
     }
@@ -64,7 +75,7 @@ try
     Console.WriteLine($"WFSOpen '{name}': result {openCode}{(openCode == Xfs.Success ? $"; service handle {service}, service version 0x{srvc.Version:X4}, SPI version 0x{spi.Version:X4}" : "")}");
     if (openCode != Xfs.Success)
     {
-        Console.WriteLine("Meaning (XFS): -3 internal error, -13 invalid hService, -12 service not found/unknown logical name, -18 version error. Check the logical name is registered and Kalignite/device services are stopped.");
+        Console.WriteLine("Result codes are the negative WFS_ERR_* values from XFSAPI.H; check the logical name is registered and Kalignite/device services are stopped.");
         return 1;
     }
 
