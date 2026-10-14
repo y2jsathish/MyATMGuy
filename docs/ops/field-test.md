@@ -13,7 +13,7 @@ atmfieldtest.exe --terminal-id ATM-0042
 - **Environment:** OS, architecture, memory, free disk, clock, whether it runs elevated.
 - **Disk:** fsync latency. Database commits wait for the disk, so this decides transaction speed.
 - **Secrets:** creates a DPAPI-protected key and round-trips an encrypted value (Windows).
-- **XFS discovery:** lists the logical services and providers registered under `HKLM\SOFTWARE\XFS` (64 and 32 bit views). Read only.
+- **XFS discovery:** lists the logical services and providers registered under `HKLM\SOFTWARE\XFS` (64 and 32 bit views). Read only. If your XFS root is elsewhere pass `--xfs-path "HKLM\SOFTWARE\Vendor\XFS"`; if nothing is found the tool also searches a few levels under `HKLM\SOFTWARE` for a `LOGICAL_SERVICES` key.
 - **Platform:** starts the full platform on a temporary folder, runs the health checks and the device self-test against the simulators, 300 transactions with audit entries, verifies the audit chain, 1,000 events on the bus, shutdown.
 - **Soak (optional):** a transaction every 100 ms plus periodic health checks, with working set, thread and handle samples every minute, then audit verification.
 

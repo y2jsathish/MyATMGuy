@@ -7,8 +7,11 @@ public sealed record DeviceHealth(DeviceKind Kind, DeviceStatus Status, string D
 
 public sealed record CardData(MaskedPan Pan);
 
-/// <summary>PIN entry outcome. The clear PIN never leaves the pin pad; only an encrypted block does.</summary>
-public sealed record PinEntryResult(bool Completed, int Length, ReadOnlyMemory<byte> EncryptedPinBlock);
+/// <summary>
+/// PIN entry outcome. The clear PIN never leaves the pin pad; only an encrypted block does.
+/// MatchToken is a keyed digest made inside the pin pad, equal for equal PINs, so two entries can be compared without exposing either.
+/// </summary>
+public sealed record PinEntryResult(bool Completed, int Length, ReadOnlyMemory<byte> EncryptedPinBlock, ReadOnlyMemory<byte> MatchToken = default);
 
 public sealed record DispenseResult(bool Success, decimal Dispensed, string? Error);
 

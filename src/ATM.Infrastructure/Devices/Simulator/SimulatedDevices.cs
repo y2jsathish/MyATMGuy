@@ -24,6 +24,9 @@ public sealed class SimulatorOptions
 
     public int PinLength { get; set; } = 4;
 
+    /// <summary>PINs the simulated customer types, in order, one per PIN entry. When empty, a default PIN of <see cref="PinLength"/> ones is used.</summary>
+    public System.Collections.Concurrent.ConcurrentQueue<string> PinScript { get; } = new();
+
     public decimal CashAvailable { get; set; } = 5000m;
 }
 
@@ -88,14 +91,15 @@ public sealed class SimulatedPinPad(SimulatorOptions options) : IPinPadPort
         cancellationToken.ThrowIfCancellationRequested();
         SimulatorGuard.EnsureUsable(Kind, options.PinPadStatus);
 
-        var length = options.PinLength;
+        var typed = options.PinScript.TryDequeue(out var scripted) ? scripted : new string('1', options.PinLength);
+        var length = typed.Length;
         if (length < minLength || length > maxLength)
         {
             return Task.FromResult(new PinEntryResult(false, length, ReadOnlyMemory<byte>.Empty));
         }
 
         // A random block stands in for the encrypted PIN block a real pin pad would return.
-        return Task.FromResult(new PinEntryResult(true, length, RandomNumberGenerator.GetBytes(8)));
+        return Task.FromResult(new PinEntryResult(true, length, RandomNumberGenerator.GetBytes(8), SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(typed))));
     }
 }
 

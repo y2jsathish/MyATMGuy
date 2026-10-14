@@ -5,7 +5,7 @@ The Phase 1 blueprint only names Phase 2 themes: XFS and XFS4IoT device integrat
 | Slice | Content | Needs hardware or the bank? | Status |
 |---|---|---|---|
 | P2-1 | Cash withdrawal flow over the device ports and a host port: limits, pending record before the host call, reversal on host timeout or dispense failure, receipt after cash, card always ejected | No (simulated devices and host) | Done, tested |
-| P2-2 | Balance inquiry, mini statement, PIN change flows on the same pattern; customer UI screens driven by the flow outcome | No | Next |
+| P2-2 | Balance inquiry, mini statement, PIN change flows on the same pattern; customer UI screens driven by the flow outcome | No | Flows done, tested (shared `CardServiceRunner`; PIN pad returns a match token so new PINs are compared without exposing them). Customer UI screens still to do |
 | P2-3 | Reversal retry job: reversals that could not be delivered are queued durably and retried until the host confirms; manual reconciliation report | No | Planned |
 | P2-4 | Host adapter for the bank's real protocol (ISO 8583 is the common case) behind `IHostGateway`, with the simulator as the contract test | Needs the host spec and a test host | Blocked on the bank |
 | P2-5 | XFS 3.x adapter behind the device ports: start with read-only status of each service (card reader, PIN pad, dispenser, printer), then command execution | Needs the DN 200V and its XFS installation | Blocked on field report |

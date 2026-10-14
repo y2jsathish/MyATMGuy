@@ -16,6 +16,14 @@ public sealed class SimulatedHostOptions
     /// <summary>When true the host never answers (the call throws a timeout), as if the network were down.</summary>
     public bool Unreachable { get; set; }
 
+    /// <summary>Recent activity the simulated host returns for a mini statement, newest first.</summary>
+    public List<HostStatementEntry> Statement { get; } =
+    [
+        new(new DateTimeOffset(2026, 1, 3, 0, 0, 0, TimeSpan.Zero), "Salary", 2500m),
+        new(new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero), "Groceries", -86.40m),
+        new(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero), "Utilities", -120m),
+    ];
+
     /// <summary>When true reversals fail, to exercise manual reconciliation.</summary>
     public bool RejectReversals { get; set; }
 }
@@ -47,6 +55,52 @@ public sealed class SimulatedHostGateway(SimulatedHostOptions options) : IHostGa
 
         options.Balance -= request.Amount;
         return Task.FromResult(new HostAuthorizationResponse(true, "00", options.Balance, null));
+    }
+
+    public Task<HostBalanceResponse> InquireBalanceAsync(HostAuthorizationRequest request, CancellationToken cancellationToken = default)
+    {
+        Check(request, cancellationToken);
+        return Task.FromResult(options.DeclineAll
+            ? new HostBalanceResponse(false, options.DeclineCode, null)
+            : new HostBalanceResponse(true, "00", options.Balance));
+    }
+
+    public Task<HostStatementResponse> GetMiniStatementAsync(HostAuthorizationRequest request, CancellationToken cancellationToken = default)
+    {
+        Check(request, cancellationToken);
+        return Task.FromResult(options.DeclineAll
+            ? new HostStatementResponse(false, options.DeclineCode, [])
+            : new HostStatementResponse(true, "00", options.Statement.ToArray()));
+    }
+
+    public Task<HostPinChangeResponse> ChangePinAsync(HostPinChangeRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (options.Unreachable)
+        {
+            throw new TimeoutException("Simulated host did not answer.");
+        }
+
+        if (options.DeclineAll)
+        {
+            return Task.FromResult(new HostPinChangeResponse(false, options.DeclineCode));
+        }
+
+        PinChanges++;
+        return Task.FromResult(new HostPinChangeResponse(true, "00"));
+    }
+
+    public int PinChanges { get; private set; }
+
+    private void Check(HostAuthorizationRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (options.Unreachable)
+        {
+            throw new TimeoutException("Simulated host did not answer.");
+        }
     }
 
     public Task ReverseAsync(Guid transactionId, decimal amount, CancellationToken cancellationToken = default)
