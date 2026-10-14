@@ -3,6 +3,7 @@ using ATM.FieldTest;
 var terminalId = "ATM-FIELD";
 var soakMinutes = 0;
 string? xfsPath = null;
+var inventoryDirs = new List<string>();
 var outDir = Directory.GetCurrentDirectory();
 for (var i = 0; i < args.Length; i++)
 {
@@ -17,11 +18,15 @@ for (var i = 0; i < args.Length; i++)
         case "--xfs-path" when i + 1 < args.Length:
             xfsPath = args[++i];
             break;
+        case "--inventory-dir" when i + 1 < args.Length:
+            inventoryDirs.Add(args[++i]);
+            break;
         case "--terminal-id" when i + 1 < args.Length:
             terminalId = args[++i];
             break;
         case "--help" or "-h" or "/?":
-            Console.WriteLine("atmfieldtest [--soak-minutes N] [--out DIR] [--terminal-id ID] [--xfs-path KEY]");
+            Console.WriteLine("atmfieldtest [--soak-minutes N] [--out DIR] [--terminal-id ID] [--xfs-path KEY] [--inventory-dir DIR]");
+            Console.WriteLine("  --inventory-dir: extra folder whose file names (not contents) are listed, read only. KAL and ProBase folders are listed by default.");
             Console.WriteLine("  --xfs-path: registry key of the XFS root if it is not HKLM\\SOFTWARE\\XFS, e.g. \"HKLM\\SOFTWARE\\Vendor\\XFS\".");
             Console.WriteLine("  Runs environment, disk, secrets, platform and XFS discovery checks, optionally a soak run, and writes a .txt and .json report.");
             Console.WriteLine("  Exit code 0 = no failures, 1 = at least one failure. It uses temporary folders and does not touch real ATM data.");
@@ -46,6 +51,7 @@ else
     report.Add("XFS", "discovery", Outcome.Skip, "Windows only");
 }
 
+Checks.Inventory(report, inventoryDirs);
 await Checks.PlatformAsync(report, terminalId);
 if (soakMinutes > 0)
 {

@@ -22,7 +22,8 @@
       "tests\\ATM.Monitoring.Api.Tests\\ATM.Monitoring.Api.Tests.csproj",
       "tools\\ATM.TestApp.Monitoring\\ATM.TestApp.Monitoring.csproj",
       "tests\\ATM.Integration.Tests\\ATM.Integration.Tests.csproj",
-      "tools\\ATM.FieldTest\\ATM.FieldTest.csproj"
+      "tools\\ATM.FieldTest\\ATM.FieldTest.csproj",
+      "tools\\ATM.XfsProbe\\ATM.XfsProbe.csproj"
     ]
   }
 }

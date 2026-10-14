@@ -91,6 +91,77 @@ public static class Checks
         }
     }
 
+    /// <summary>
+    /// Read-only inventory of the vendor software around XFS: file names (never contents) under the usual KAL and ProBase folders,
+    /// and running processes that look like device or XFS software. Lets us see how the machine is configured without reading secrets.
+    /// </summary>
+    public static void Inventory(Report report, IEnumerable<string> extraDirectories)
+    {
+        const string S = "Inventory";
+        var roots = new List<string>(extraDirectories);
+        roots.AddRange([@"C:\ProgramData\KAL", @"C:\ProBase\CONF", @"C:\ProBase\BIN"]);
+        foreach (var root in roots.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (!Directory.Exists(root))
+            {
+                report.Add(S, root, Outcome.Info, "not present");
+                continue;
+            }
+
+            var count = 0;
+            var options = new EnumerationOptions { RecurseSubdirectories = true, MaxRecursionDepth = 4, IgnoreInaccessible = true };
+            foreach (var path in Directory.EnumerateFileSystemEntries(root, "*", options))
+            {
+                if (count++ >= 250)
+                {
+                    report.Add(S, root, Outcome.Info, "listing truncated at 250 entries");
+                    break;
+                }
+
+                var isDir = Directory.Exists(path);
+                long size = 0;
+                if (!isDir)
+                {
+                    try
+                    {
+                        size = new FileInfo(path).Length;
+                    }
+                    catch (IOException)
+                    {
+                        // Unreadable entry: list it without a size.
+                    }
+                }
+
+                report.Add(S, "file", Outcome.Info, isDir ? $"{path}\\" : $"{path} ({size} bytes)");
+            }
+        }
+
+        foreach (var dll in new[] { @"C:\Windows\SysWOW64\msxfs.dll", @"C:\Windows\System32\msxfs.dll", @"C:\Windows\SysWOW64\xfs_conf.dll", @"C:\Windows\SysWOW64\xfs_supp.dll" })
+        {
+            if (File.Exists(dll))
+            {
+                var info = FileVersionInfo.GetVersionInfo(dll);
+                report.Add(S, "xfs library", Outcome.Info, $"{dll} version {info.FileVersion}, company {info.CompanyName}");
+            }
+            else
+            {
+                report.Add(S, "xfs library", Outcome.Info, $"{dll} not present");
+            }
+        }
+
+        var hints = new[] { "kal", "probase", "xfs", "agilis", "diebold", "dbd", "atm", "cash", "cardrdr" };
+        foreach (var process in Process.GetProcesses().OrderBy(p => p.ProcessName, StringComparer.OrdinalIgnoreCase))
+        {
+            using (process)
+            {
+                if (hints.Any(h => process.ProcessName.Contains(h, StringComparison.OrdinalIgnoreCase)))
+                {
+                    report.Add(S, "process", Outcome.Info, $"{process.ProcessName} (pid {process.Id})");
+                }
+            }
+        }
+    }
+
     [SupportedOSPlatform("windows")]
     public static void Xfs(Report report, string? customPath = null)
     {

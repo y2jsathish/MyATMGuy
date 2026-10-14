@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ATM.XfsProbe</RootNamespace>
+    <AssemblyName>atmxfsprobe</AssemblyName>
+    <!-- XFS managers and service providers on ATMs are 32-bit, so the probe must be x86. -->
+    <PlatformTarget>x86</PlatformTarget>
+    <!-- Hand-written P/Invoke against a fixed vendor ABI; source-generated marshalling adds nothing here. -->
+    <NoWarn>$(NoWarn);SYSLIB1054;CA1401;CA2101;CA5392</NoWarn>
+  </PropertyGroup>
+</Project>

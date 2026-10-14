@@ -7,6 +7,7 @@ using ATM.Application.Monitoring;
 using ATM.Application.Notifications;
 using ATM.Application.Persistence;
 using ATM.Application.Terminal;
+using ATM.Application.Transactions;
 using ATM.Core.Errors;
 using ATM.Infrastructure.Monitoring;
 using ATM.Infrastructure.Persistence;
@@ -61,6 +62,16 @@ public sealed class OutboxReplayJob(IMonitoringClient monitoring) : IScheduledJo
             await monitoring.ReplayQueuedAsync(cancellationToken).ConfigureAwait(false);
         }
     }
+}
+
+/// <summary>Sends reversals the host has not accepted yet. A run that finds nothing due does nothing.</summary>
+public sealed class ReversalRetryJob(ReversalService reversals) : IScheduledJob
+{
+    public string Name => "reversal-retry";
+
+    public JobSchedule Schedule { get; } = JobSchedule.Every(TimeSpan.FromSeconds(30));
+
+    public async Task RunAsync(CancellationToken cancellationToken) => await reversals.RetryDueAsync(cancellationToken).ConfigureAwait(false);
 }
 
 public sealed class BackupJob(DatabaseMaintenance maintenance) : IScheduledJob

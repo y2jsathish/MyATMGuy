@@ -29,6 +29,8 @@ public sealed class AtmDbContext(DbContextOptions<AtmDbContext> options) : DbCon
 
     public DbSet<DeadLetter> DeadLetters => Set<DeadLetter>();
 
+    public DbSet<ReversalRequest> Reversals => Set<ReversalRequest>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<DateTimeOffset>().HaveConversion<DateTimeOffsetToUtcTicks>();
@@ -41,6 +43,7 @@ public sealed class AtmDbContext(DbContextOptions<AtmDbContext> options) : DbCon
         configurationBuilder.Properties<DeviceStatus>().HaveConversion<string>().HaveMaxLength(16);
         configurationBuilder.Properties<TransactionType>().HaveConversion<string>().HaveMaxLength(32);
         configurationBuilder.Properties<TransactionStatus>().HaveConversion<string>().HaveMaxLength(16);
+        configurationBuilder.Properties<ReversalState>().HaveConversion<string>().HaveMaxLength(16);
         configurationBuilder.Properties<AuditCategory>().HaveConversion<string>().HaveMaxLength(16);
     }
 
@@ -110,6 +113,25 @@ public sealed class AtmDbContext(DbContextOptions<AtmDbContext> options) : DbCon
             b.Property(x => x.Handler).HasMaxLength(128);
             b.Property(x => x.Error).HasMaxLength(2048);
             b.HasIndex(x => x.FailedUtc);
+        });
+
+        modelBuilder.Entity<ReversalRequest>(b =>
+        {
+            b.ToTable("Reversals");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).ValueGeneratedNever();
+            b.Property(x => x.Terminal);
+            b.Property(x => x.Amount);
+            b.Property(x => x.CreatedUtc);
+            b.Property(x => x.State);
+            b.Property(x => x.Attempts);
+            b.Property(x => x.NextAttemptUtc);
+            b.Property(x => x.LastAttemptUtc);
+            b.Property(x => x.ResolvedUtc);
+            b.Property<long>(RowVersion).IsConcurrencyToken();
+            b.Property(x => x.LastError).HasMaxLength(512);
+            b.HasIndex(x => new { x.State, x.NextAttemptUtc });
+            b.HasIndex(x => x.CreatedUtc);
         });
 
         modelBuilder.Entity<ConfigItem>(b =>
