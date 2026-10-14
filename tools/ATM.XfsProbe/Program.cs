@@ -69,13 +69,26 @@ try
         return 1;
     }
 
+    // The service version range is negotiated separately from the manager's; try every range and print each raw result.
     var srvc = default(Xfs.WfsVersion);
     var spi = default(Xfs.WfsVersion);
-    var openCode = Xfs.WFSOpen(name, IntPtr.Zero, "atmxfsprobe", 0, timeout, usedRange, ref srvc, ref spi, out var service);
-    Console.WriteLine($"WFSOpen '{name}': result {openCode}{(openCode == Xfs.Success ? $"; service handle {service}, service version 0x{srvc.Version:X4}, SPI version 0x{spi.Version:X4}" : "")}");
+    var openCode = -1;
+    ushort service = 0;
+    foreach (var (packed, label) in candidates.Prepend((usedRange, "manager range")))
+    {
+        srvc = default;
+        spi = default;
+        openCode = Xfs.WFSOpen(name, IntPtr.Zero, "atmxfsprobe", 0, timeout, packed, ref srvc, ref spi, out service);
+        Console.WriteLine($"WFSOpen '{name}' {label} 0x{packed:X8}: result {openCode}{(openCode == Xfs.Success ? $"; service handle {service}, service version 0x{srvc.Version:X4}, SPI version 0x{spi.Version:X4}" : "")}");
+        if (openCode == Xfs.Success)
+        {
+            break;
+        }
+    }
+
     if (openCode != Xfs.Success)
     {
-        Console.WriteLine("Result codes are the negative WFS_ERR_* values from XFSAPI.H; check the logical name is registered and Kalignite/device services are stopped.");
+        Console.WriteLine("Result codes are the negative WFS_ERR_* values from XFSAPI.H; check the logical name is registered and Kalignite is stopped (the Diebold device service may need to be running for its provider).");
         return 1;
     }
 

@@ -8,7 +8,7 @@ On the DN 200V the XFS manager, the service providers and their registry keys ar
 
 ## Before you run it
 
-1. Stop Kalignite and any Diebold device services (`DbdDevService`, `Diebold.Harvester.Service`). Only one program can own a device at a time.
+1. Stop Kalignite so it does not own the devices. The Diebold provider (`dbdspi.dll`) may need the Diebold device service (`DbdDevService`) to be running; if the open call fails with -15 while it is stopped, start it and try again.
 2. Pick a logical service name that already exists. The KAL XFS manager reads logical services from `HKEY_USERS\.DEFAULT\XFS\LOGICAL_SERVICES` (the machine's `HKLM\SOFTWARE\WOW6432Node\XFS` holds only the providers), so nothing needs to be registered. List them with `reg query "HKEY_USERS\.DEFAULT\XFS\LOGICAL_SERVICES" /s`. On the DN 200V the DIP card reader is `DN_SecDipCardRdr` (class `IDC`, provider `DN_SecDipCardRdr`, backed by `dbdspi.dll`).
 
 If you earlier created `HKLM\SOFTWARE\XFS\LOGICAL_SERVICES\ATM_IDC` (or the doubled `WOW6432Node\WOW6432Node` path), it is unused and can be removed:
