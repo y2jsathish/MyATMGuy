@@ -29,6 +29,8 @@ public static class ErrorCatalogue
     public static readonly ErrorCode DispenseFailed = new("ATM-5003", ErrorSeverity.High, "Cash was authorized but could not be dispensed; a reversal was requested.");
     public static readonly ErrorCode ReversalFailed = new("ATM-5004", ErrorSeverity.Critical, "A reversal could not be delivered to the host and needs manual reconciliation.");
 
+    public static readonly ErrorCode UpdateRejected = new("ATM-6001", ErrorSeverity.High, "A software update package failed verification and was not accepted.");
+
     public static IReadOnlyList<ErrorCode> All { get; } =
     [
         Unknown,
@@ -46,6 +48,7 @@ public static class ErrorCatalogue
         HostUnavailable,
         DispenseFailed,
         ReversalFailed,
+        UpdateRejected,
     ];
 
     public static ErrorCode? Find(string code) =>

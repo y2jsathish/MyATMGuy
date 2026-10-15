@@ -10,7 +10,7 @@ The Phase 1 blueprint only names Phase 2 themes: XFS and XFS4IoT device integrat
 | P2-4 | Host adapter for the bank's real protocol (ISO 8583 is the common case) behind `IHostGateway`, with the simulator as the contract test | Needs the host spec and a test host | Blocked on the bank |
 | P2-5 | XFS 3.x adapter behind the device ports: start with read-only status of each service (card reader, PIN pad, dispenser, printer), then command execution | Needs the DN 200V and its XFS installation | Blocked on field report |
 | P2-6 | XFS4IoT adapter (WebSocket) for terminals that expose it | Needs a terminal with XFS4IoT | Later |
-| P2-7 | mTLS to the monitoring API, per-terminal keys, signed software updates, kiosk lockdown baseline | Partly | Later |
+| P2-7 | mTLS to the monitoring API, per-terminal keys, signed software updates, kiosk lockdown baseline | Partly | Signed update verification done, tested (`UpdatePackageVerifier`, SEC-12). Installing a verified package, mTLS, per-terminal keys and kiosk lockdown still to do |
 
 ## How the DN 200V helps now
 Run `atmfieldtest.exe` (see `docs/ops/field-test.md`) and send back the report. Its XFS section lists the logical services and providers installed on the machine, which decides what P2-5 has to target. Nothing in P2-5 will be coded blind: the first adapter build will only read device status, so a first run on the machine cannot move cash.
@@ -28,3 +28,9 @@ Run `atmfieldtest.exe` (see `docs/ops/field-test.md`) and send back the report. 
 - The `reversal-retry` job runs every 30 seconds and sends reversals whose wait is over. The wait starts at 30 seconds and doubles to a cap of 15 minutes (`ReversalOptions`).
 - After 12 attempts (`MaxAttempts`) the reversal is Abandoned: audit entry `ReversalAbandoned`, ATM-5004 raised again, and it stays in the unresolved list (`ReversalService.UnresolvedAsync`) for manual reconciliation. A delivered reversal is audited as `ReversalSent`.
 - Supervisors see the unresolved list on the Maintenance screen (after the passcode), refreshed with the health list.
+
+## Decisions taken in P2-7 (update verification)
+- A package is a folder of files plus a manifest (product, version, optional minimum current version, file list with SHA-256 and size) and a detached ECDSA P-256 signature over the exact manifest bytes. The terminal holds only the public key.
+- `UpdatePackageVerifier` accepts a package only if the signature is valid, the product matches, the version is newer than the running one (no downgrade), the running version meets the minimum, and the folder holds exactly the listed files with matching sizes and hashes (no extra files, no paths outside the folder).
+- Every verdict is audited as a Security entry (`UpdateVerified` or `UpdateRejected`); a rejection also counts error ATM-6001.
+- Verification does not install anything. Installing, rollback and the distribution channel come with the software distribution agent and the signing certificate decision.
